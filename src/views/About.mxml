@@ -1,0 +1,186 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:View xmlns:fx="http://ns.adobe.com/mxml/2009" actionBarVisible="false" creationComplete="view1_creationCompleteHandler(event)"
+		xmlns:s="library://ns.adobe.com/flex/spark" title="LessonViewer">
+	<fx:Script>
+		<![CDATA[
+			import mx.events.FlexEvent;
+			
+			import spark.managers.PersistenceManager;
+			
+			[Bindable]
+			private var titleFontSize:int;
+			
+			[Bindable]
+			private var descFontSize:int;
+			
+			private var p:PersistenceManager = new PersistenceManager();
+			
+			protected function view1_creationCompleteHandler(event:FlexEvent):void
+			{
+				trace(Capabilities.os.substring(0,2));
+				if (Capabilities.os.substring(0,2) == "iP") { // iPhone, iPad and iPod Touch padding at the top
+					hGroupActionBarContents.paddingTop = 40;
+					vGroupNoConnection.paddingTop = 40;
+				} else {
+					hGroupActionBarContents.paddingTop = 0;
+				}
+				
+				var colourScheme:String = p.getProperty("colourScheme") as String;
+				var colourSchemeLabel:String = p.getProperty("colourSchemeLabel") as String;
+
+				var appXml:XML = NativeApplication.nativeApplication.applicationDescriptor;
+				var ns:Namespace = appXml.namespace();
+				var appVersion:String = appXml.ns::versionNumber[0];
+				labelVersionInfo.text = appVersion;
+				
+				// http://forum.starling-framework.org/topic/detect-device-type-phone-tablet
+				var w:Number = Capabilities.screenResolutionX;
+				var h:Number = Capabilities.screenResolutionY;
+				var dpi:Number = Capabilities.screenDPI;
+				
+				var screenInches:Number = Math.round(Math.sqrt(Math.pow(w/dpi,2)+Math.pow(h/dpi,2)) * 100) / 100;
+				
+				/*if (screenInches > 7.5) {
+					labelActionBarTitle.setStyle("paddingTop", "35");
+					labelActionBarTitle.setStyle("paddingBottom", "35");
+				}*/
+				
+				var languageURL:URLRequest;
+				var selectedLanguage:String = p.getProperty("language") as String;
+				if (selectedLanguage == "fr") {
+					languageURL = new URLRequest("../res/translations/fr.xml");
+				} else {
+					languageURL = new URLRequest("../res/translations/en.xml");
+				}
+				
+				var licenceLoader:URLLoader = new URLLoader();
+				licenceLoader.addEventListener(Event.COMPLETE, displayText);
+				licenceLoader.load(languageURL);
+				
+				function displayText(event:Event):void {
+					var fileContents:XML = new XML(event.currentTarget.data);
+					for (var item:String in fileContents.about) {
+						labelActionBarTitle.text = "\u2190 " + fileContents.about.@title[item];
+						labelVersionTitle.text = fileContents.about.@versionTitle[item];
+						//labelVersionInfo.text = fileContents.about.@versionInfo[item];
+						labelCopyrightTitle.text = fileContents.about.@copyrightTitle[item];
+						labelIconTitle.text = fileContents.about.@iconsTitle[item];
+						labelIconInfo.text = fileContents.about.@iconInfo[item];
+						labelIconLink.text = fileContents.about.@licenceInfo[item];
+						labelFontTitle.text = fileContents.about.@fontTitle[item];
+						labelFontInfo.text = fileContents.about.@fontInfo[item];
+						labelFontLink.text = fileContents.about.@licenceInfo[item];
+					}
+				}
+			}
+			
+		]]>
+	</fx:Script>
+	
+	<s:VGroup id="vGroupMain" height="100%" width="100%" gap="0"> 
+		<s:Group id="groupActionBarTitle" width="100%">
+			<s:Rect width="100%" height="100%">
+				<!--<s:stroke>
+				<s:SolidColorStroke id="colourActionBarTitleBorder" color="#000000" weight="2" />
+				</s:stroke>-->
+				<s:fill><s:SolidColor id="backgroundActionBarTitle" color="#801332"/></s:fill>
+			</s:Rect>
+			<s:HGroup id="hGroupActionBarContents" width="100%" verticalAlign="middle" height="100%" paddingLeft="10" paddingRight="10">
+				<s:Label id="labelActionBarTitle" maxDisplayedLines="1" text="&#8592; About" color="#FFFFFF" styleName="title" paddingTop="20" paddingBottom="20" click="navigator.popToFirstView();"/>
+			</s:HGroup>
+		</s:Group>
+		
+		<s:VGroup id="vGroupBackground" width="100%" height="100%" gap="0" depth="1">
+			
+			<s:Group id="groupBackground" width="100%" height="100%">
+				
+				<s:Rect width="100%" height="100%">
+					<!--<s:stroke>
+					<s:SolidColorStroke id="colourActionBarTitleBorder" color="#000000" weight="2" />
+					</s:stroke>-->
+					<s:fill><s:SolidColor id="backgroundBackground" color="#E8E8E8"/></s:fill>
+				</s:Rect>
+
+				<s:Scroller id="mainScroller" width="100%" height="100%">
+					
+					<s:VGroup id="vGroupContent" height="100%" width="100%" paddingRight="20" paddingLeft="20" paddingTop="20" paddingBottom="20" gap="0">
+						<s:Group id="groupCardAbout" width="100%">
+							<s:Rect width="100%" height="100%">
+								<!--<s:stroke>
+								<s:SolidColorStroke id="colourActionBarTitleBorder" color="#000000" weight="2" />
+								</s:stroke>-->
+								<s:fill><s:SolidColor id="backgroundCardAbout" color="#FFFFFF"/></s:fill>
+							</s:Rect>
+							<s:VGroup width="100%" height="100%" paddingRight="10" paddingLeft="10" paddingTop="10" paddingBottom="10" verticalAlign="middle">
+								<s:Label id="labelVersionTitle" text="Version" width="100%"/>
+								<s:Label id="labelVersionInfo" width="100%"/>
+								<s:Spacer height="20"/>
+								<s:Label id="labelCopyrightTitle" text="Copyright" width="100%"/>
+								<s:Label id="labelCopyrightInfo" width="100%" text="\u00A9 2014-2015 Bryan Smith."/>
+							</s:VGroup>
+						</s:Group>
+						<s:Line width="100%">
+							<s:stroke>
+								<s:SolidColorStroke color="0xB0B0B0" weight="2"/>
+							</s:stroke>
+						</s:Line>
+						<s:Spacer height="30"/>
+						
+						<s:Group id="groupCardConfigColour" width="100%">
+							<s:Rect width="100%" height="100%">
+								<!--<s:stroke>
+								<s:SolidColorStroke id="colourActionBarTitleBorder" color="#000000" weight="2" />
+								</s:stroke>-->
+								<s:fill><s:SolidColor id="backgroundCardConfigColour" color="#FFFFFF"/></s:fill>
+							</s:Rect>
+							<s:VGroup width="100%" height="100%" paddingRight="10" paddingLeft="10" paddingTop="10" paddingBottom="10" verticalAlign="middle">
+								<s:Label id="labelIconTitle" text="Icons" width="100%"/>
+								<s:Label id="labelIconInfo" width="100%" text="\u00A9 Google. Licenced under the Creative Commons Attribution-ShareAlike 4.0 International Licence. See licence for the disclaimer of warranties and limitation of liability."/>
+								<s:Label id="labelIconLink" text="Licence Info" color="#801332" width="100%" click="navigator.pushView(AboutIconsLicence);"/>
+								<s:Spacer height="20"/>
+								<s:Label id="labelFontTitle" text="Font" width="100%"/>
+								<s:Label id="labelFontInfo" width="100%" text="\u00A9 2014 Mozilla and Telefonica S.A. Licenced under the SIL Open Font Licence."/>
+								<s:Label id="labelFontLink" text="Licence Info" color="#801332" width="100%" click="navigator.pushView(AboutFontLicence);"/>
+								<!--<s:Spacer height="20"/>-->
+								<!--<s:Label id="labelFullscreenTitle" text="Mesmotronic Fullscreen Library" width="100%"/>
+								<s:Label id="labelFullscreenInfo" width="100%" text="\u00A9 2014 Mesmotronic Limited. Licenced under the BSD Licence"/>
+								<s:Label id="labelFullscreenLink" text="Licence Info" width="100%" click="navigator.pushView(About);"/>-->
+								<!--<s:Spacer height="20"/>
+								<s:Label id="labelChalkboardTitle" text="Chalkboard Background" width="100%" color="{backgroundActionBarTitle.color}"/>
+								<s:Label id="labelChalkboardInfo" width="100%" text="Picture released into the public domain."/>
+								<s:Label id="labelChalkboardLink" text="More Info" width="100%" color="{backgroundActionBarTitle.color}" click="navigateToURL(new URLRequest('http://commons.wikimedia.org/wiki/File:Chalkboard_in_a_school_in_Afghanistan.jpg'), '_blank');"/>--> <!-- http://www.republicofcode.com/tutorials/flash/as3link/ -->
+							</s:VGroup>
+						</s:Group>
+						<s:Line width="100%">
+							<s:stroke>
+								<s:SolidColorStroke color="0xB0B0B0" weight="2"/>
+							</s:stroke>
+						</s:Line>
+						
+					</s:VGroup>
+					
+				</s:Scroller>
+				
+			</s:Group>
+			
+		</s:VGroup>
+	</s:VGroup>
+	
+	<s:VGroup width="100%" height="100%">
+		<s:Group id="groupNetworkError" width="100%" visible="false" includeInLayout="false" depth="2">
+			<!-- http://flexponential.com/2009/11/23/adding-a-background-color-to-a-spark-group/ --> 
+			<s:Rect width="100%" height="100%">
+				<s:fill><s:SolidColor color="#B80000" alpha="0.9"/></s:fill>
+			</s:Rect>
+			<s:VGroup id="vGroupNoConnection" paddingBottom="10" paddingLeft="10" paddingRight="10" width="100%">
+				<s:Spacer id="spacerNetworkTop" width="10" height="10"/>
+				<s:HGroup id="hGroupConnectionProblem" width="100%">
+					<s:Label id="labelNetworkError" height="100%" width="100%" color="#FFFFFF"
+							 text="No network connection." verticalAlign="middle" textAlign="center"/>
+				</s:HGroup>
+				<s:Spacer id="spacerNetworkBottom" width="10" height="10"/>
+			</s:VGroup>
+		</s:Group>
+	</s:VGroup>
+	
+</s:View>

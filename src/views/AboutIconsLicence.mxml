@@ -1,0 +1,130 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:View xmlns:fx="http://ns.adobe.com/mxml/2009" actionBarVisible="false" creationComplete="view1_creationCompleteHandler(event)"
+		xmlns:s="library://ns.adobe.com/flex/spark" title="LessonViewer">
+	<fx:Script>
+		<![CDATA[
+			import mx.events.FlexEvent;
+			
+			import spark.managers.PersistenceManager;
+			
+			[Bindable]
+			private var titleFontSize:int;
+			
+			[Bindable]
+			private var descFontSize:int;
+			
+			private var p:PersistenceManager = new PersistenceManager();
+			
+			protected function view1_creationCompleteHandler(event:FlexEvent):void
+			{
+				/*var os:String = Capabilities.os.substr(0,11);
+				if (os == "iPhone OS 7") {
+				hGroupActionBarContents.paddingTop = 30;
+				}*/
+				trace(Capabilities.os.substring(0,2));
+				if (Capabilities.os.substring(0,2) == "iP") { // iPhone, iPad and iPod Touch padding at the top
+					hGroupActionBarContents.paddingTop = 40;
+					vGroupNoConnection.paddingTop = 40;
+				} else {
+					hGroupActionBarContents.paddingTop = 0;
+				}
+				
+				var colourScheme:String = p.getProperty("colourScheme") as String;
+				var colourSchemeLabel:String = p.getProperty("colourSchemeLabel") as String;
+				
+				// http://www.trainingtutorials101.com/2010/07/load-external-text-actionscript-30.html
+				var licenceURL:URLRequest = new URLRequest("../res/cc_attribution_icons.txt");
+				var licenceLoader:URLLoader = new URLLoader();
+				licenceLoader.addEventListener(Event.COMPLETE, displayText);
+				
+				function displayText(e:Event):void {
+					labelLicenceInfo.text = e.target.data;
+				}
+				
+				licenceLoader.load(licenceURL);
+			
+				getLanguage();
+			}
+			
+			private function getLanguage():void {
+				var languageURL:URLRequest;
+				var selectedLanguage:String = p.getProperty("language") as String;
+				
+				if (selectedLanguage == "fr") {
+					languageURL = new URLRequest("../res/translations/fr.xml");
+				} else {
+					languageURL = new URLRequest("../res/translations/en.xml");					
+				}
+				
+				var licenceLoader:URLLoader = new URLLoader();
+				licenceLoader.addEventListener(Event.COMPLETE, displayText);
+				licenceLoader.load(languageURL);
+				
+				function displayText(event:Event):void {
+					var fileContents:XML = new XML(event.currentTarget.data);
+					for (var item:String in fileContents.aboutIcons) {
+						labelActionBarTitle.text = "\u2190 " + fileContents.aboutIcons.@title[item];
+					}
+				}
+			}
+		]]>
+	</fx:Script>
+	
+	<s:VGroup id="vGroupMain" height="100%" width="100%" gap="0"> 
+		<s:Group id="groupActionBarTitle" width="100%">
+			<s:Rect width="100%" height="100%">
+				<!--<s:stroke>
+				<s:SolidColorStroke id="colourActionBarTitleBorder" color="#000000" weight="2" />
+				</s:stroke>-->
+				<s:fill><s:SolidColor id="backgroundActionBarTitle" color="#801332"/></s:fill>
+			</s:Rect>
+			<s:HGroup id="hGroupActionBarContents" width="100%" verticalAlign="middle" height="100%" paddingLeft="10" paddingRight="10">
+				<s:Label id="labelActionBarTitle" width="100%" maxDisplayedLines="1" text="&#8592; Creative Commons Attribution-ShareAlike 4.0 International Licence" color="#FFFFFF" styleName="title" paddingTop="20" paddingBottom="20" paddingRight="20" click="navigator.popView();"/>
+			</s:HGroup>
+		</s:Group>
+		
+		<s:VGroup id="vGroupBackground" width="100%" height="100%" gap="0" depth="1">
+			
+			<s:Group id="groupBackground" width="100%" height="100%">
+				
+				<s:Rect width="100%" height="100%">
+					<!--<s:stroke>
+					<s:SolidColorStroke id="colourActionBarTitleBorder" color="#000000" weight="2" />
+					</s:stroke>-->
+					<s:fill><s:SolidColor id="backgroundBackground" color="#E8E8E8"/></s:fill>
+				</s:Rect>
+				
+				<s:Scroller id="mainScroller" width="100%" height="100%">
+					
+					<s:VGroup id="vGroupContent" height="100%" width="100%" paddingRight="20" paddingLeft="20" paddingTop="20" paddingBottom="20">
+						<!--
+							- As noted by the Creative Commons, this particular licence is only available in English, Norwegian and Finnish. No official French version is available
+						-->
+						<s:Label id="labelLicenceInfo" width="100%" text=""/>
+					</s:VGroup>
+					
+				</s:Scroller>
+				
+			</s:Group>
+			
+		</s:VGroup>
+	</s:VGroup>
+	
+	<s:VGroup width="100%" height="100%">
+		<s:Group id="groupNetworkError" width="100%" visible="false" includeInLayout="false" depth="2">
+			<!-- http://flexponential.com/2009/11/23/adding-a-background-color-to-a-spark-group/ --> 
+			<s:Rect width="100%" height="100%">
+				<s:fill><s:SolidColor color="#B80000" alpha="0.9"/></s:fill>
+			</s:Rect>
+			<s:VGroup id="vGroupNoConnection" paddingBottom="10" paddingLeft="10" paddingRight="10" width="100%">
+				<s:Spacer id="spacerNetworkTop" width="10" height="10"/>
+				<s:HGroup id="hGroupConnectionProblem" width="100%">
+					<s:Label id="labelNetworkError" height="100%" width="100%" color="#FFFFFF"
+							 text="No network connection." verticalAlign="middle" textAlign="center"/>
+				</s:HGroup>
+				<s:Spacer id="spacerNetworkBottom" width="10" height="10"/>
+			</s:VGroup>
+		</s:Group>
+	</s:VGroup>
+	
+</s:View>

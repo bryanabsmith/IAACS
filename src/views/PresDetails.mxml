@@ -1,0 +1,302 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:View xmlns:fx="http://ns.adobe.com/mxml/2009" creationComplete="view1_creationCompleteHandler(event)"
+		xmlns:s="library://ns.adobe.com/flex/spark" title="Home" actionBarVisible="false">
+	<fx:Script>
+		<![CDATA[
+			import mx.events.FlexEvent;
+			
+			import spark.managers.PersistenceManager;
+			
+			import air.net.URLMonitor;
+			
+			private var db:File;
+			private var sqlConn:SQLConnection;
+			private var sqlStmt:SQLStatement;
+			
+			//import com.mesmotronic.ane.AndroidFullScreen;
+			
+			[Embed(source="../res/program.png")]
+			[Bindable]
+			public var imgProgram:Class;
+			
+			[Embed(source="../res/restaurant.png")]
+			[Bindable]
+			public var imgRestaurant:Class;
+			
+			[Embed(source="../res/hotel.png")]
+			[Bindable]
+			public var imgHotel:Class;
+			
+			[Embed(source="../res/conversation.png")]
+			[Bindable]
+			public var imgConversation:Class;
+			
+			[Embed(source="../res/people.png")]
+			[Bindable]
+			public var imgPeople:Class;
+			
+			[Embed(source="../res/configure.png")]
+			[Bindable]
+			public var imgConfigure:Class;
+			
+			[Embed(source="../res/about.png")]
+			[Bindable]
+			public var imgAbout:Class;
+			
+			[Bindable]
+			private var titleFontSize:int;
+			
+			[Bindable]
+			private var descFontSize:int;
+			
+			private var urlMonitor:URLMonitor;
+			
+			private var p:PersistenceManager = new PersistenceManager();
+			
+			private var url:String = "http://bryanabsmith.com/iaacs/app/program_list.xml";
+			
+			private var pName:String = "";
+			private var pTitle:String = "";
+			private var pDate:String = "";
+			private var pTime:String = "";
+			private var pRoom:String = "";
+			private var pAbstract:String = "";
+			
+			private var dateTitle:String = "Date";
+			private var timeTitle:String = "Time";
+			private var roomTitle:String = "Room";
+			private var monthTitle:String = "May";
+			
+			protected function view1_creationCompleteHandler(event:FlexEvent):void
+			{
+				trace(Capabilities.os.substring(0,2));
+				if (Capabilities.os.substring(0,2) == "iP") { // iPhone, iPad and iPod Touch padding at the top
+					hGroupActionBarContents.paddingTop = 40;
+					hGroupLoading.paddingTop = 40;
+					vGroupNoConnection.paddingTop = 40;
+				} else {
+					hGroupActionBarContents.paddingTop = 0;
+					hGroupLoading.paddingTop = 0;
+				}
+				
+				var languageURL:URLRequest;
+				var selectedLanguage:String = p.getProperty("language") as String;
+				
+				if (selectedLanguage == "fr") {	
+					languageURL = new URLRequest("../res/translations/fr.xml");					
+				} else {
+					languageURL = new URLRequest("../res/translations/en.xml");
+				}
+				
+				var licenceLoader:URLLoader = new URLLoader();
+				licenceLoader.addEventListener(Event.COMPLETE, displayText);
+				licenceLoader.load(languageURL);
+				
+				function displayText(event:Event):void {
+					var fileContents:XML = new XML(event.currentTarget.data);
+					for (var item:String in fileContents.presDetails) {
+						labelActionBarTitle.text = "\u2190 " + fileContents.presDetails.@title[item];
+						labelActionBarSave.text = fileContents.presDetails.@saveTitle[item];
+						labelLoadingMessages.text = fileContents.presDetails.@loadingMessage[item];
+						labelSavedSession.text = fileContents.presDetails.@savedPres[item];
+						nameTitle.text = fileContents.presDetails.@nameTitle[item];
+						titleTitle.text = fileContents.presDetails.@titleTitle[item];
+						detailsTitle.text = fileContents.presDetails.@detailsTitle[item];
+						abstractTitle.text = fileContents.presDetails.@abstractTitle[item];
+						
+						dateTitle = fileContents.presDetails.@dateTitle[item];
+						timeTitle = fileContents.presDetails.@timeTitle[item];
+						roomTitle = fileContents.presDetails.@roomTitle[item];
+						monthTitle = fileContents.presDetails.@monthTitle[item];
+					}
+				}
+				
+				var colourScheme:String = p.getProperty("colourScheme") as String;
+				var colourSchemeLabel:String = p.getProperty("colourSchemeLabel") as String;
+				
+				var urlRequest:URLRequest = new URLRequest("http://www.bryanabsmith.com");
+				urlMonitor = new URLMonitor(urlRequest);
+				urlMonitor.addEventListener(StatusEvent.STATUS, onStatusEvent);
+				urlMonitor.start();
+				
+				sqlConn = new SQLConnection();
+				db = File.applicationStorageDirectory.resolvePath("iaacsSaved.db");
+				
+				sqlStmt = new SQLStatement();
+				
+				if (db.exists) {
+					sqlConn.open(db);
+					sqlStmt.sqlConnection = sqlConn;
+				} else {
+					sqlConn.open(db);
+					sqlStmt.sqlConnection = sqlConn;
+					sqlStmt.text = "CREATE TABLE iaacsSaved (id INTEGER PRIMARY KEY AUTOINCREMENT, name LONGTEXT, title LONGTEXT, details LONGTEXT, abstract LONGTEXT)";
+					sqlStmt.execute();
+				}
+			}
+			
+			private function onStatusEvent(event:StatusEvent):void
+			{
+				var evt:StatusEvent = event;
+				if (evt.code == "Service.available") {
+					groupNetworkError.visible = false;
+					groupNetworkError.includeInLayout = false;
+					mainScroller.enabled = true;
+					
+					var myLoader:URLLoader = new URLLoader();
+					myLoader.addEventListener(Event.COMPLETE, showDetails);
+					myLoader.load(new URLRequest(url));
+				} else {
+					groupNetworkError.visible = true;
+					groupNetworkError.includeInLayout = true;
+					mainScroller.enabled = false;
+				}
+			}
+			
+			protected function showDetails(event:Event):void
+			{
+				var fileContents:XML = new XML(event.currentTarget.data);
+				var count:int = 0;
+				var records:Array = [];
+				var urls:Array = [];
+
+				var pNameLower:String = "";
+				var pTitleLower:String = "";
+				
+				var pSearchString:String = String(data[1]);
+				
+				for (var item:String in fileContents.item) {
+					
+					pName = fileContents.item.@name[item];
+					pTitle = fileContents.item.@title[item];
+					pDate = fileContents.item.@date[item];
+					pTime = fileContents.item.@time[item];
+					pRoom = fileContents.item.@room[item];
+					pAbstract = fileContents.item.@abstract[item];
+					
+					if (pName == data[0] && pTitle == data[1]) {
+						nameBody.text = pName;
+						titleBody.text = pTitle;
+						detailsBody.text = dateTitle + ": " + monthTitle + " " + pDate + "\n" + timeTitle + ": " + pTime + "\n" + roomTitle + ": " + pRoom;
+						//detailsBody.text = "Date: May " + pDate + "\nTime: " + pTime + "\nRoom: " + pRoom;
+						
+						abstractBody.text = pAbstract;
+					}
+				}
+				
+				hGroupActionBarContents.visible = true;
+				hGroupActionBarContents.includeInLayout = true;
+				hGroupLoading.visible = false;
+				hGroupLoading.includeInLayout = false;
+			}
+			
+			protected function labelActionBarSave_clickHandler(event:MouseEvent):void
+			{
+				sqlStmt.parameters[":name"] = nameBody.text;
+				sqlStmt.parameters[":title"] = titleBody.text;
+				sqlStmt.parameters[":details"] = detailsBody.text;
+				sqlStmt.parameters[":abstract"] = abstractBody.text;
+				
+				var insertQuery:String = "INSERT INTO iaacsSaved (name, title, details, abstract) VALUES (:name, :title, :details, :abstract)";
+				sqlStmt.text = insertQuery;
+				
+				sqlStmt.execute();
+				
+				showSavedLabel.play();
+				var hider:Timer = new Timer(50000);
+				hider.start();
+				labelSavedSession.includeInLayout = true;
+				hideSavedLabel.play();
+			}
+			
+		]]>
+	</fx:Script>
+	
+	<fx:Declarations>
+		<s:SlideViewTransition id="slideTransition" duration="300" direction="up" transitionControlsWithContent="false"/>
+		<s:Fade id="showSavedLabel" alphaFrom="0" alphaTo="1" duration="3000" target="{labelSavedSession}"/>
+		<s:Fade id="hideSavedLabel" alphaFrom="1" alphaTo="0" duration="3000" target="{labelSavedSession}"/>
+	</fx:Declarations>
+	
+	<s:VGroup id="vGroupMain" height="100%" width="100%" gap="0">
+		<s:Group id="groupActionBarTitle" width="100%">
+			<s:Rect width="100%" height="100%">
+				<s:fill><s:SolidColor id="backgroundActionBarTitle" color="#801332"/></s:fill>
+			</s:Rect>
+			
+			<s:HGroup id="hGroupLoading" width="100%" verticalAlign="middle" height="100%" paddingLeft="10" paddingRight="10" paddingBottom="10" horizontalAlign="center">
+				<!--<s:BusyIndicator id="loadingMessagesIndicator" symbolColor="#FFFFFF" height="100%"/>--> 
+				<s:Label id="labelLoadingMessages" text="Loading details..."  color="#FFFFFF" styleName="title" paddingTop="20" paddingBottom="20" paddingRight="10" paddingLeft="10" verticalAlign="middle" maxDisplayedLines="1" height="100%"/>
+			</s:HGroup>
+			
+			<s:HGroup id="hGroupActionBarContents" width="100%" verticalAlign="middle" height="100%" paddingLeft="10" paddingRight="10" visible="false" includeInLayout="false">
+				<s:Label id="labelActionBarTitle" maxDisplayedLines="1" text="&#8592; Back" color="#FFFFFF" styleName="title" paddingTop="20" paddingBottom="20" click="navigator.popView();"/>
+				<s:Spacer width="100%"/>
+				<s:Label id="labelActionBarSave" maxDisplayedLines="1" text="Save" color="#FFFFFF" styleName="title" paddingTop="20" paddingBottom="20" click="labelActionBarSave_clickHandler(event)"/>
+			</s:HGroup>
+		</s:Group>
+		
+		<!-- http://help.adobe.com/en_US/flex/using/WS422719A4-7849-4921-AF39-57FF567B483B.html#WS063B0491-B7AB-4b00-A39F-E44310BCB0E0 -->
+		<!--<s:SkinnableContainer id="backgroundContainer" height="100%" width="100%" skinClass="skins.BackPic">-->
+		
+		<s:VGroup id="vGroupBackground" width="100%" height="100%" gap="0">
+			
+			<s:Group id="groupBackground" width="100%" height="100%">
+				
+				<s:Rect width="100%" height="100%">
+					<!--<s:stroke>
+					<s:SolidColorStroke id="colourActionBarTitleBorder" color="#000000" weight="2" />
+					</s:stroke>-->
+					<s:fill><s:SolidColor id="backgroundBackground" color="#E8E8E8"/></s:fill>
+				</s:Rect>
+				
+				<s:Label id="labelSavedSession" text="Presentation saved." textAlign="center" backgroundColor="#000000" backgroundAlpha="0.5" color="#FFFFFF" paddingBottom="10" paddingTop="10" width="100%" depth="2" visible="false" includeInLayout="false"/>
+				
+				<s:Scroller id="mainScroller" width="100%" height="100%">
+					
+					<s:VGroup id="vGroupContent" height="100%" width="100%" gap="0" paddingRight="20" paddingLeft="20" paddingTop="20" paddingBottom="20">
+						
+						<s:Label id="nameTitle" text="Name(s)" styleName="title" width="100%"/>
+						<s:Label id="nameBody" styleName="desc" width="100%" paddingLeft="20"/>
+						<s:Spacer height="30"/>
+						
+						<s:Label id="titleTitle" text="Title" styleName="title" width="100%"/>
+						<s:Label id="titleBody" styleName="desc" width="100%" paddingLeft="20"/>
+						<s:Spacer height="30"/>
+						
+						<s:Label id="detailsTitle" text="Details" styleName="title" width="100%"/>
+						<s:Label id="detailsBody" styleName="desc" width="100%" paddingLeft="20"/>
+						<s:Spacer height="30"/>
+						
+						<s:Label id="abstractTitle" text="Abstract" styleName="title" width="100%"/>
+						<s:Label id="abstractBody" styleName="desc" width="100%" paddingLeft="20"/>
+						<s:Spacer height="30"/>
+						
+					</s:VGroup>
+					
+				</s:Scroller>
+				
+			</s:Group>
+			
+		</s:VGroup>
+		<!--</s:SkinnableContainer>-->		
+	</s:VGroup>
+	
+	<s:VGroup width="100%" height="100%">
+		<s:Group id="groupNetworkError" width="100%" visible="false" includeInLayout="false" depth="2">
+			<!-- http://flexponential.com/2009/11/23/adding-a-background-color-to-a-spark-group/ --> 
+			<s:Rect width="100%" height="100%">
+				<s:fill><s:SolidColor color="#B80000" alpha="0.9"/></s:fill>
+			</s:Rect>
+			<s:VGroup id="vGroupNoConnection" paddingBottom="10" paddingLeft="10" paddingRight="10" width="100%">
+				<s:Spacer id="spacerNetworkTop" width="10" height="10"/>
+				<s:HGroup id="hGroupConnectionProblem" width="100%">
+					<s:Label id="labelNetworkError" height="100%" width="100%" color="#FFFFFF"
+							 text="No network connection." verticalAlign="middle" textAlign="center"/>
+				</s:HGroup>
+				<s:Spacer id="spacerNetworkBottom" width="10" height="10"/>
+			</s:VGroup>
+		</s:Group>
+	</s:VGroup>
+	
+</s:View>

@@ -1,0 +1,712 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:View xmlns:fx="http://ns.adobe.com/mxml/2009" creationComplete="view1_creationCompleteHandler(event)"
+		xmlns:s="library://ns.adobe.com/flex/spark" title="Home" actionBarVisible="false">
+	<fx:Script>
+		<![CDATA[
+			import flash.sensors.Geolocation;
+			
+			import mx.events.FlexEvent;
+			
+			import spark.components.SplitViewNavigator;
+			import spark.components.ViewNavigator;
+			import spark.managers.PersistenceManager;
+			
+			import air.net.URLMonitor;
+			
+			[Embed(source="../res/news.png")]
+			[Bindable]
+			public var imgNews:Class;
+			
+			[Embed(source="../res/happeningToday.png")]
+			[Bindable]
+			public var imgDigest:Class;
+			
+			[Embed(source="../res/program.png")]
+			[Bindable]
+			public var imgProgram:Class;
+			
+			[Embed(source="../res/restaurant.png")]
+			[Bindable]
+			public var imgRestaurant:Class;
+			
+			[Embed(source="../res/hotel.png")]
+			[Bindable]
+			public var imgHotel:Class;
+			
+			[Embed(source="../res/conversation.png")]
+			[Bindable]
+			public var imgConversation:Class;
+			
+			[Embed(source="../res/people.png")]
+			[Bindable]
+			public var imgPeople:Class;
+			
+			[Embed(source="../res/configure.png")]
+			[Bindable]
+			public var imgConfigure:Class;
+			
+			[Embed(source="../res/about.png")]
+			[Bindable]
+			public var imgAbout:Class;
+			
+			[Bindable]
+			private var titleFontSize:int;
+			
+			[Bindable]
+			private var descFontSize:int;
+			
+			private var urlMonitor:URLMonitor;
+			
+			private var p:PersistenceManager = new PersistenceManager();
+			
+			private var url:String = "http://bryanabsmith.com/iaacs/app/news_list.xml";
+			
+			private var geo:Geolocation;
+			private var lat:String;
+			private var long:String;
+			
+			private var isTablet:Boolean = false;
+
+			protected function view1_creationCompleteHandler(event:FlexEvent):void
+			{
+				// http://forum.starling-framework.org/topic/detect-device-type-phone-tablet
+				var w:Number = Capabilities.screenResolutionX;
+				var h:Number = Capabilities.screenResolutionY;
+				var dpi:Number = Capabilities.screenDPI;
+				
+				var screenInches:Number = Math.round(Math.sqrt(Math.pow(w/dpi,2)+Math.pow(h/dpi,2)) * 100) / 100;
+				
+				if (screenInches > 6) {
+					isTablet = true;
+					groupViewNews.visible = false;
+					groupViewNews.includeInLayout = false;
+					/*labelActionBarTitle.setStyle("paddingTop", "35");
+					labelActionBarTitle.setStyle("paddingBottom", "35");*/
+				}
+				
+				var languageURL:URLRequest;
+				var selectedLanguage:String = p.getProperty("language") as String;
+				if (selectedLanguage == "fr") {
+					languageURL = new URLRequest("../res/translations/fr.xml");
+				} else {
+					languageURL = new URLRequest("../res/translations/en.xml");
+				}
+				
+				var licenceLoader:URLLoader = new URLLoader();
+				licenceLoader.addEventListener(Event.COMPLETE, displayText);
+				licenceLoader.load(languageURL);
+				
+				function displayText(event:Event):void {
+					var fileContents:XML = new XML(event.currentTarget.data);
+					for (var item:String in fileContents.home) {
+						labelActionBarTitle.text = fileContents.home.@title[item];
+						labelNewsTitle.text = fileContents.home.@newsTitle[item];
+						labelNewsDesc.text = fileContents.home.@newsDesc[item];
+						labelProgramTitle.text = fileContents.home.@programTitle[item];
+						labelProgramDesc.text = fileContents.home.@programDesc[item];
+						labelRestaurantTitle.text = fileContents.home.@restTitle[item];
+						labelRestaurantDesc.text = fileContents.home.@restDesc[item];
+						labelHotelTitle.text = fileContents.home.@hotelTitle[item];
+						labelHotelDesc.text = fileContents.home.@hotelDesc[item];
+						labelConversationTitle.text = fileContents.home.@msgTitle[item];
+						labelConversationDesc.text = fileContents.home.@msgDesc[item];
+						labelPeopleTitle.text = fileContents.home.@peopleTitle[item];
+						labelPeopleDesc.text = fileContents.home.@peopleDesc[item];
+						labelConfigureTitle.text = fileContents.home.@configTitle[item];
+						labelConfigureDesc.text = fileContents.home.@configDesc[item];
+						labelAboutTitle.text = fileContents.home.@aboutTitle[item];
+						labelAboutDesc.text = fileContents.home.@aboutDesc[item];
+
+						labelViewNews.text = "\u2190 " + fileContents.home.@newsTitle[item];
+					}
+				}
+				
+				if (Capabilities.os.substring(0,2) == "iP") { // iPhone, iPad and iPod Touch padding at the top
+					hGroupActionBarContents.paddingTop = 40;
+					vGroupNoConnection.paddingTop = 40;
+				} else {
+					hGroupActionBarContents.paddingTop = 0;
+				}
+				
+				var colourScheme:String = p.getProperty("colourScheme") as String;
+				var colourSchemeLabel:String = p.getProperty("colourSchemeLabel") as String;
+				var firstView:String = p.getProperty("firstViewAppName") as String;
+				
+				/*if (firstView == "News") {
+					if (FlexGlobals.topLevelApplication.newsViewed == false) {
+						groupViewNews.visible = true;
+						groupViewNews.includeInLayout = true;
+						FlexGlobals.topLevelApplication.newsViewed = true;
+					}
+				}*/
+				
+				var urlRequest:URLRequest = new URLRequest("http://www.bryanabsmith.com");
+				urlMonitor = new URLMonitor(urlRequest);
+				urlMonitor.addEventListener(StatusEvent.STATUS, onStatusEvent);
+				urlMonitor.start();
+				
+				// Although this isn't needed here, there seem to be delays on (at least) iOS with registering location which messed with the maps.
+				if (Geolocation.isSupported) { 
+					geo = new Geolocation(); 
+					if (!geo.muted) { 
+						geo.addEventListener(GeolocationEvent.UPDATE, geoUpdateHandler); 
+					} 
+					geo.addEventListener(StatusEvent.STATUS, geoStatusHandler);
+				} 
+				else { 
+					trace("Geolocation not supported.");
+				}
+			}
+			
+			public function refreshNews():void {
+				var urlRequest:URLRequest = new URLRequest("http://www.bryanabsmith.com");
+				urlMonitor = new URLMonitor(urlRequest);
+				urlMonitor.addEventListener(StatusEvent.STATUS, onStatusEvent);
+				urlMonitor.start();
+			}
+			
+			public function geoUpdateHandler(event:GeolocationEvent):void 
+			{ 
+				lat = event.latitude.toString();
+				long = event.longitude.toString();
+				geo.removeEventListener(GeolocationEvent.UPDATE, geoUpdateHandler);
+			}
+			
+			public function geoStatusHandler(event:StatusEvent):void 
+			{ 
+				if (geo.muted)
+					geo.removeEventListener(GeolocationEvent.UPDATE, geoUpdateHandler);
+				else
+					geo.addEventListener(GeolocationEvent.UPDATE, geoStatusHandler);
+			}
+			
+			private function onStatusEvent(event:StatusEvent):void
+			{
+				var evt:StatusEvent = event;
+				if (evt.code == "Service.available") {
+					groupNetworkError.visible = false;
+					groupNetworkError.includeInLayout = false;
+					mainScroller.enabled = true;
+					
+					var myLoader:URLLoader = new URLLoader();
+					myLoader.addEventListener(Event.COMPLETE, showNewsList);
+					myLoader.load(new URLRequest(url));
+				} else {
+					groupNetworkError.visible = true;
+					groupNetworkError.includeInLayout = true;
+					mainScroller.enabled = false;
+				}
+			}
+			
+			protected function showNewsList(event:Event):void
+			{
+				vGroupViewNews.removeAllElements();
+				var fileContents:XML = new XML(event.currentTarget.data);
+				var count:int = 0;
+				var records:Array = [];
+				var urls:Array = [];
+				
+				var nDate:String = "";
+				var nNews:String = "";
+				var nType:String = "";
+				
+				for (var item:String in fileContents.item) {
+					
+					nDate = fileContents.item.@date[item];
+					nNews = fileContents.item.@news[item];
+					nType = fileContents.item.@type[item];
+					
+					var groupNewsCard:Group = new Group();
+					var newsRect:Rect = new Rect();
+					var newsStrokeColour:SolidColorStroke = new SolidColorStroke();
+					var newsFill:SolidColor = new SolidColor();
+
+					var vGroupNews:VGroup = new VGroup();
+					var vGroupInfo:VGroup = new VGroup();
+					var bottomSpacer:Spacer = new Spacer();
+					
+					var date:Label = new Label();
+					var news:Label = new Label();
+					
+					groupNewsCard.percentWidth = 100;
+					//groupBookCard.percentHeight = 10;
+					
+					newsRect.percentWidth = 100;
+					newsRect.percentHeight = 100;
+					newsRect.alpha = 0.85;
+					
+					if (nType == "urgent") {
+						newsStrokeColour.color = 0xFFCC00;
+					} else {
+						newsStrokeColour.color = 0x505050;
+					}
+					newsStrokeColour.weight = 2;
+					newsRect.stroke = newsStrokeColour;
+					
+					if (nType == "urgent") {
+						newsFill.color = 0xFFCC00;
+					} else {
+						newsFill.color = 0x505050;
+					}
+					newsRect.fill = newsFill;
+					
+					newsRect.bottomLeftRadiusX = 10;
+					newsRect.bottomLeftRadiusY = 10;
+					newsRect.bottomRightRadiusX = 10;
+					newsRect.bottomRightRadiusY = 10;
+					newsRect.topLeftRadiusX = 10;
+					newsRect.topLeftRadiusY = 10;
+					newsRect.topRightRadiusX = 10;
+					newsRect.topRightRadiusY = 10;
+					
+					groupNewsCard.addElement(newsRect);
+					
+					records[count] = new HGroup();
+					// http://stackoverflow.com/a/1046147
+					records[count].percentWidth = 100;
+					records[count].verticalAlign = "middle";
+					
+					vGroupNews.percentWidth = 100;
+					//vGroupRestaurant.height = 120;
+					vGroupNews.paddingTop = 20;
+					vGroupNews.paddingBottom = 20;
+					vGroupNews.paddingLeft = 20;
+					vGroupNews.paddingRight = 20;
+					
+					date.text = nDate;
+					date.percentWidth = 100;
+					date.setStyle("styleName", "title");
+					date.setStyle("color", "0xFFFFFF");
+					
+					news.text = nNews;
+					news.percentWidth = 100;
+					news.setStyle("styleName", "desc");
+					news.setStyle("color", "0xFFFFFF");
+					
+					vGroupNews.addElement(date);
+					vGroupNews.addElement(news);
+					
+					records[count].addElement(vGroupNews);
+					
+					//vGroupInfo.percentWidth = 100;
+					//vGroupRestaurant.height = 120;
+					vGroupInfo.paddingTop = 10;
+					vGroupInfo.paddingBottom = 10;
+					vGroupInfo.paddingLeft = 10;
+					vGroupInfo.paddingRight = 10;
+					
+					records[count].addElement(vGroupInfo);
+					
+					groupNewsCard.addElement(records[count]);
+					vGroupViewNews.addElement(groupNewsCard);
+					
+					bottomSpacer.height = 10;
+					bottomSpacer.percentWidth = 100;
+					
+					vGroupViewNews.addElement(bottomSpacer);
+					count++;
+				}
+				loadingNews.visible = false;
+			}
+			
+			protected function groupCardAbout_clickHandler(event:MouseEvent):void
+			{
+				if (isTablet == false) {
+					navigator.pushView(About);
+				} else {
+					// http://help.adobe.com/en_US/flex/mobileapps/WSa367498dc1175407-5e4576591324aa78a9f-8000.html
+					var splitNavigator:SplitViewNavigator = navigator.parentNavigator as SplitViewNavigator;
+					var aboutNavigator:ViewNavigator = splitNavigator.getViewNavigatorAt(1) as ViewNavigator;
+					aboutNavigator.pushView(About);
+				}
+			}
+			
+			protected function groupCardNews_clickHandler(event:MouseEvent):void
+			{
+				if (isTablet == false) {
+					refreshNews();
+					groupViewNews.visible = true;
+					groupViewNews.includeInLayout = true;
+				} else {
+					// http://help.adobe.com/en_US/flex/mobileapps/WSa367498dc1175407-5e4576591324aa78a9f-8000.html
+					var splitNavigator:SplitViewNavigator = navigator.parentNavigator as SplitViewNavigator;
+					var aboutNavigator:ViewNavigator = splitNavigator.getViewNavigatorAt(1) as ViewNavigator;
+					aboutNavigator.pushView(News);
+				}
+			}
+			
+			protected function groupCardProgram_clickHandler(event:MouseEvent):void
+			{
+				if (isTablet == false) {
+					navigator.pushView(Program);
+				} else {
+					// http://help.adobe.com/en_US/flex/mobileapps/WSa367498dc1175407-5e4576591324aa78a9f-8000.html
+					var splitNavigator:SplitViewNavigator = navigator.parentNavigator as SplitViewNavigator;
+					var aboutNavigator:ViewNavigator = splitNavigator.getViewNavigatorAt(1) as ViewNavigator;
+					aboutNavigator.pushView(Program);
+				}
+			}
+			
+			protected function groupCardRestaurant_clickHandler(event:MouseEvent):void
+			{
+				if (isTablet == false) {
+					navigator.pushView(RestaurantList);
+				} else {
+					// http://help.adobe.com/en_US/flex/mobileapps/WSa367498dc1175407-5e4576591324aa78a9f-8000.html
+					var splitNavigator:SplitViewNavigator = navigator.parentNavigator as SplitViewNavigator;
+					var aboutNavigator:ViewNavigator = splitNavigator.getViewNavigatorAt(1) as ViewNavigator;
+					aboutNavigator.pushView(RestaurantList);
+				}
+			}
+			
+			protected function groupCardHotel_clickHandler(event:MouseEvent):void
+			{
+				if (isTablet == false) {
+					navigator.pushView(HotelList);
+				} else {
+					// http://help.adobe.com/en_US/flex/mobileapps/WSa367498dc1175407-5e4576591324aa78a9f-8000.html
+					var splitNavigator:SplitViewNavigator = navigator.parentNavigator as SplitViewNavigator;
+					var aboutNavigator:ViewNavigator = splitNavigator.getViewNavigatorAt(1) as ViewNavigator;
+					aboutNavigator.pushView(HotelList);
+				}
+			}
+			
+			protected function groupCardConversation_clickHandler(event:MouseEvent):void
+			{
+				if (isTablet == false) {
+					navigator.pushView(Messages);
+				} else {
+					// http://help.adobe.com/en_US/flex/mobileapps/WSa367498dc1175407-5e4576591324aa78a9f-8000.html
+					var splitNavigator:SplitViewNavigator = navigator.parentNavigator as SplitViewNavigator;
+					var aboutNavigator:ViewNavigator = splitNavigator.getViewNavigatorAt(1) as ViewNavigator;
+					aboutNavigator.pushView(Messages);
+				}
+			}
+			
+			protected function groupCardPeople_clickHandler(event:MouseEvent):void
+			{
+				if (isTablet == false) {
+					navigator.pushView(People);
+				} else {
+					// http://help.adobe.com/en_US/flex/mobileapps/WSa367498dc1175407-5e4576591324aa78a9f-8000.html
+					var splitNavigator:SplitViewNavigator = navigator.parentNavigator as SplitViewNavigator;
+					var aboutNavigator:ViewNavigator = splitNavigator.getViewNavigatorAt(1) as ViewNavigator;
+					aboutNavigator.pushView(People);
+				}
+			}
+			
+			protected function groupCardConfigure_clickHandler(event:MouseEvent):void
+			{
+				if (isTablet == false) {
+					navigator.pushView(Configure);
+				} else {
+					// http://help.adobe.com/en_US/flex/mobileapps/WSa367498dc1175407-5e4576591324aa78a9f-8000.html
+					var splitNavigator:SplitViewNavigator = navigator.parentNavigator as SplitViewNavigator;
+					var aboutNavigator:ViewNavigator = splitNavigator.getViewNavigatorAt(1) as ViewNavigator;
+					aboutNavigator.pushView(Configure);
+				}
+			}
+			
+			protected function groupCardDigest_clickHandler(event:MouseEvent):void
+			{
+				if (isTablet == false) {
+					navigator.pushView(Digest);
+				} else {
+					// http://help.adobe.com/en_US/flex/mobileapps/WSa367498dc1175407-5e4576591324aa78a9f-8000.html
+					var splitNavigator:SplitViewNavigator = navigator.parentNavigator as SplitViewNavigator;
+					var aboutNavigator:ViewNavigator = splitNavigator.getViewNavigatorAt(1) as ViewNavigator;
+					aboutNavigator.pushView(Digest);
+				}
+			}
+			
+		]]>
+	</fx:Script>
+	
+	<fx:Declarations>
+		<s:SlideViewTransition id="slideTransition" duration="300" direction="up" transitionControlsWithContent="false"/>
+	</fx:Declarations>
+
+	<s:VGroup id="vGroupMain" height="100%" width="100%" gap="0">
+		<s:Group id="groupActionBarTitle" width="100%">
+			<s:Rect width="100%" height="100%">
+				<s:fill><s:SolidColor id="backgroundActionBarTitle" color="#801332"/></s:fill>
+			</s:Rect>
+			<s:HGroup id="hGroupActionBarContents" width="100%" verticalAlign="middle" height="100%" paddingLeft="10" paddingRight="10">
+				<s:Label id="labelActionBarTitle" maxDisplayedLines="1" text="IAACS 2015" color="#FFFFFF" styleName="title" paddingTop="20" paddingBottom="20"/>
+				<s:Spacer width="100%"/>
+			</s:HGroup>
+		</s:Group>
+		
+		<!-- http://help.adobe.com/en_US/flex/using/WS422719A4-7849-4921-AF39-57FF567B483B.html#WS063B0491-B7AB-4b00-A39F-E44310BCB0E0 -->
+		<!--<s:SkinnableContainer id="backgroundContainer" height="100%" width="100%" skinClass="skins.BackPic">-->
+		
+		<s:VGroup id="vGroupBackground" width="100%" height="100%" gap="0">
+			
+			<s:Group id="groupBackground" width="100%" height="100%">
+				
+				<s:Rect width="100%" height="100%">
+					<!--<s:stroke>
+					<s:SolidColorStroke id="colourActionBarTitleBorder" color="#000000" weight="2" />
+					</s:stroke>-->
+					<s:fill><s:SolidColor id="backgroundBackground" color="#E8E8E8"/></s:fill>
+				</s:Rect>
+				
+				<s:Scroller id="mainScroller" width="100%" height="100%">
+					
+					<s:VGroup id="vGroupContent" height="100%" width="100%" gap="0" paddingRight="20" paddingLeft="20" paddingTop="20" paddingBottom="20">
+						
+						<s:Group id="groupCardNews" width="100%" click="groupCardNews_clickHandler(event)">
+							<s:Rect width="100%" height="100%">
+								<!--<s:stroke>
+								<s:SolidColorStroke id="colourActionBarTitleBorder" color="#000000" weight="2" />
+								</s:stroke>-->
+								<s:fill><s:SolidColor id="backgroundCardNews" color="#FFFFFF"/></s:fill>
+							</s:Rect>
+							<s:HGroup width="100%" height="100%" paddingRight="10" paddingLeft="10" paddingTop="10" paddingBottom="10" verticalAlign="middle">
+								<s:Image id="imageNews" height="{labelActionBarTitle.height - 20}" width="{labelActionBarTitle.height - 20}" source="{imgNews}" smooth="true" smoothingQuality="high"/>
+								<s:VGroup width="100%" height="100%" paddingLeft="30">
+									<s:Label id="labelNewsTitle" text="News" styleName="title" width="100%"/>
+									<s:Label id="labelNewsDesc" text="News from the organizers and coordinators." styleName="desc" width="100%"/>
+								</s:VGroup>
+							</s:HGroup>
+						</s:Group>
+						<s:Line width="100%">
+							<s:stroke>
+								<s:SolidColorStroke color="0xB0B0B0" weight="2"/>
+							</s:stroke>
+						</s:Line>
+						
+						<s:Spacer height="20"/>
+						
+						<!--<s:Group id="groupCardDigest" width="100%" click="groupCardDigest_clickHandler(event)">
+							<s:Rect width="100%" height="100%">
+								<s:fill><s:SolidColor id="backgroundCardDigest" color="#FFFFFF"/></s:fill>
+							</s:Rect>
+							<s:HGroup width="100%" height="100%" paddingRight="10" paddingLeft="10" paddingTop="10" paddingBottom="10" verticalAlign="middle">
+								<s:Image id="imageDigest" height="{labelActionBarTitle.height - 20}" width="{labelActionBarTitle.height - 20}" source="{imgDigest}" smooth="true" smoothingQuality="high"/>
+								<s:VGroup width="100%" height="100%" paddingLeft="30">
+									<s:Label id="labelDigestTitle" text="Daily Digest" styleName="title" width="100%"/>
+									<s:Label id="labelDigestDesc" text="Quick summary of the day's happenings." styleName="desc" width="100%"/>
+								</s:VGroup>
+							</s:HGroup>
+						</s:Group>
+						<s:Line width="100%">
+							<s:stroke>
+								<s:SolidColorStroke color="0xB0B0B0" weight="2"/>
+							</s:stroke>
+						</s:Line>
+						
+						<s:Spacer height="20"/>-->
+						
+						<s:Group id="groupCardProgram" width="100%" click="groupCardProgram_clickHandler(event)">
+							<s:Rect width="100%" height="100%">
+								<!--<s:stroke>
+								<s:SolidColorStroke id="colourActionBarTitleBorder" color="#000000" weight="2" />
+								</s:stroke>-->
+								<s:fill><s:SolidColor id="backgroundCardProgram" color="#FFFFFF"/></s:fill>
+							</s:Rect>
+							
+							<s:HGroup width="100%" height="100%" paddingRight="10" paddingLeft="10" paddingTop="10" paddingBottom="10" verticalAlign="middle">
+								<s:Image id="imageProgram" height="{labelActionBarTitle.height - 20}" width="{labelActionBarTitle.height - 20}" source="{imgProgram}" smooth="true" smoothingQuality="high"/>
+								<s:VGroup width="100%" height="100%" paddingLeft="30">
+									<s:Label id="labelProgramTitle" text="Program" styleName="title" width="100%"/>
+									<s:Label id="labelProgramDesc" text="Search the program or view the conference program by date." styleName="desc" width="100%"/>
+								</s:VGroup>
+							</s:HGroup>
+						</s:Group>
+						<s:Line width="100%">
+							<s:stroke>
+								<s:SolidColorStroke color="0xB0B0B0" weight="2"/>
+							</s:stroke>
+						</s:Line>
+						
+						<s:Spacer height="20"/>
+						
+						<s:Group id="groupCardRestaurant" width="100%" click="groupCardRestaurant_clickHandler(event)">
+							<s:Rect width="100%" height="100%">
+								<!--<s:stroke>
+								<s:SolidColorStroke id="colourActionBarTitleBorder" color="#000000" weight="2" />
+								</s:stroke>-->
+								<s:fill><s:SolidColor id="backgroundCardRestaurant" color="#FFFFFF"/></s:fill>
+							</s:Rect>
+							<s:HGroup width="100%" height="100%" paddingRight="10" paddingLeft="10" paddingTop="10" paddingBottom="10" verticalAlign="middle">
+								<s:Image id="imageRestaurant" height="{labelActionBarTitle.height - 20}" width="{labelActionBarTitle.height - 20}" source="{imgRestaurant}" smooth="true" smoothingQuality="high"/>
+								<s:VGroup width="100%" height="100%" paddingLeft="30">
+									<s:Label id="labelRestaurantTitle" text="Restaurants" styleName="title" width="100%"/>
+									<s:Label id="labelRestaurantDesc" text="Find restaurants near the conference venue." styleName="desc" width="100%"/>
+								</s:VGroup>
+							</s:HGroup>
+						</s:Group>
+						<s:Line width="100%">
+							<s:stroke>
+								<s:SolidColorStroke color="0xB0B0B0" weight="2"/>
+							</s:stroke>
+						</s:Line>
+						
+						<s:Spacer height="20"/>
+						
+						<s:Group id="groupCardHotel" width="100%" click="groupCardHotel_clickHandler(event)">
+							<s:Rect width="100%" height="100%">
+								<!--<s:stroke>
+								<s:SolidColorStroke id="colourActionBarTitleBorder" color="#000000" weight="2" />
+								</s:stroke>-->
+								<s:fill><s:SolidColor id="backgroundCardHotel" color="#FFFFFF"/></s:fill>
+							</s:Rect>
+							<s:HGroup width="100%" height="100%" paddingRight="10" paddingLeft="10" paddingTop="10" paddingBottom="10" verticalAlign="middle">
+								<s:Image id="imageHotel" height="{labelActionBarTitle.height - 20}" width="{labelActionBarTitle.height - 20}" source="{imgHotel}" smooth="true" smoothingQuality="high"/>
+								<s:VGroup width="100%" height="100%" paddingLeft="30">
+									<s:Label id="labelHotelTitle" text="Hotels" styleName="title" width="100%"/>
+									<s:Label id="labelHotelDesc" text="Find accommodations near the conference venue." styleName="desc" width="100%"/>
+								</s:VGroup>
+							</s:HGroup>
+						</s:Group>
+						<s:Line width="100%">
+							<s:stroke>
+								<s:SolidColorStroke color="0xB0B0B0" weight="2"/>
+							</s:stroke>
+						</s:Line>
+						
+						<s:Spacer height="20"/>
+						
+						<s:Group id="groupCardConversation" width="100%" click="groupCardConversation_clickHandler(event)">
+							<s:Rect width="100%" height="100%">
+								<!--<s:stroke>
+								<s:SolidColorStroke id="colourActionBarTitleBorder" color="#000000" weight="2" />
+								</s:stroke>-->
+								<s:fill><s:SolidColor id="backgroundCardConversation" color="#FFFFFF"/></s:fill>
+							</s:Rect>
+							<s:HGroup width="100%" height="100%" paddingRight="10" paddingLeft="10" paddingTop="10" paddingBottom="10" verticalAlign="middle">
+								<s:Image id="imageConversation" height="{labelActionBarTitle.height - 20}" width="{labelActionBarTitle.height - 20}" source="{imgConversation}" smooth="true" smoothingQuality="high"/>
+								<s:VGroup width="100%" height="100%" paddingLeft="30">
+									<s:Label id="labelConversationTitle" text="Messages" styleName="title" width="100%"/>
+									<s:Label id="labelConversationDesc" text="Discuss conference related topics or just leave a message for other attendees." styleName="desc" width="100%"/>
+								</s:VGroup>
+							</s:HGroup>
+						</s:Group>
+						<s:Line width="100%">
+							<s:stroke>
+								<s:SolidColorStroke color="0xB0B0B0" weight="2"/>
+							</s:stroke>
+						</s:Line>
+						
+						<s:Spacer height="20"/>
+						
+						<s:Group id="groupCardPeople" width="100%" click="groupCardPeople_clickHandler(event)">
+							<s:Rect width="100%" height="100%">
+								<!--<s:stroke>
+								<s:SolidColorStroke id="colourActionBarTitleBorder" color="#000000" weight="2" />
+								</s:stroke>-->
+								<s:fill><s:SolidColor id="backgroundCardPeople" color="#FFFFFF"/></s:fill>
+							</s:Rect>
+							<s:HGroup width="100%" height="100%" paddingRight="10" paddingLeft="10" paddingTop="10" paddingBottom="10" verticalAlign="middle">
+								<s:Image id="imagePeople" height="{labelActionBarTitle.height - 20}" width="{labelActionBarTitle.height - 20}" source="{imgPeople}" smooth="true" smoothingQuality="high"/>
+								<s:VGroup width="100%" height="100%" paddingLeft="30">
+									<s:Label id="labelPeopleTitle" text="People" styleName="title" width="100%"/>
+									<s:Label id="labelPeopleDesc" text="List of keynotes, organizers and co-ordinators." styleName="desc" width="100%"/>
+								</s:VGroup>
+							</s:HGroup>
+						</s:Group>
+						<s:Line width="100%">
+							<s:stroke>
+								<s:SolidColorStroke color="0xB0B0B0" weight="2"/>
+							</s:stroke>
+						</s:Line>
+						
+						<s:Spacer height="20"/>
+						
+						<s:Group id="groupCardConfigure" width="100%" click="groupCardConfigure_clickHandler(event)">
+							<s:Rect width="100%" height="100%">
+								<!--<s:stroke>
+								<s:SolidColorStroke id="colourActionBarTitleBorder" color="#000000" weight="2" />
+								</s:stroke>-->
+								<s:fill><s:SolidColor id="backgroundCardConfigure" color="#FFFFFF"/></s:fill>
+							</s:Rect>
+							<s:HGroup width="100%" height="100%" paddingRight="10" paddingLeft="10" paddingTop="10" paddingBottom="10" verticalAlign="middle">
+								<s:Image id="imageConfigure" height="{labelActionBarTitle.height - 20}" width="{labelActionBarTitle.height - 20}" source="{imgConfigure}" smooth="true" smoothingQuality="high"/>
+								<s:VGroup width="100%" height="100%" paddingLeft="30">
+									<s:Label id="labelConfigureTitle" text="Configure" styleName="title" width="100%"/>
+									<s:Label id="labelConfigureDesc" text="Various application and personal settings." styleName="desc" width="100%"/>
+								</s:VGroup>
+							</s:HGroup>
+						</s:Group>
+						<s:Line width="100%">
+							<s:stroke>
+								<s:SolidColorStroke color="0xB0B0B0" weight="2"/>
+							</s:stroke>
+						</s:Line>
+						
+						<s:Spacer height="20"/>
+						
+						<s:Group id="groupCardAbout" width="100%" click="groupCardAbout_clickHandler(event)">
+							<s:Rect width="100%" height="100%">
+								<!--<s:stroke>
+								<s:SolidColorStroke id="colourActionBarTitleBorder" color="#000000" weight="2" />
+								</s:stroke>-->
+								<s:fill><s:SolidColor id="backgroundCardAbout" color="#FFFFFF"/></s:fill>
+							</s:Rect>
+							<s:HGroup width="100%" height="100%" paddingRight="10" paddingLeft="10" paddingTop="10" paddingBottom="10" verticalAlign="middle">
+								<s:Image id="imageAbout" height="{labelActionBarTitle.height - 20}" width="{labelActionBarTitle.height - 20}" source="{imgAbout}" smooth="true" smoothingQuality="high"/>
+								<s:VGroup width="100%" height="100%" paddingLeft="30">
+									<s:Label id="labelAboutTitle" text="About" styleName="title" width="100%"/>
+									<s:Label id="labelAboutDesc" text="Information about the app." styleName="desc" width="100%"/>
+								</s:VGroup>
+							</s:HGroup>
+						</s:Group>
+						<s:Line width="100%">
+							<s:stroke>
+								<s:SolidColorStroke color="0xB0B0B0" weight="2"/>
+							</s:stroke>
+						</s:Line>
+						
+					</s:VGroup>
+					
+				</s:Scroller>
+				
+			</s:Group>
+			
+		</s:VGroup>
+		<!--</s:SkinnableContainer>-->		
+	</s:VGroup>
+	
+	<s:VGroup width="100%" height="100%">
+		<s:Group id="groupNetworkError" width="100%" visible="false" includeInLayout="false" depth="2">
+			<!-- http://flexponential.com/2009/11/23/adding-a-background-color-to-a-spark-group/ --> 
+			<s:Rect width="100%" height="100%">
+				<s:fill><s:SolidColor color="#B80000" alpha="0.9"/></s:fill>
+			</s:Rect>
+			<s:VGroup id="vGroupNoConnection" paddingBottom="10" paddingLeft="10" paddingRight="10" width="100%">
+				<s:Spacer id="spacerNetworkTop" width="10" height="10"/>
+				<s:HGroup id="hGroupConnectionProblem" width="100%">
+					<s:Label id="labelNetworkError" height="100%" width="100%" color="#FFFFFF"
+							 text="No network connection." verticalAlign="middle" textAlign="center"/>
+				</s:HGroup>
+				<s:Spacer id="spacerNetworkBottom" width="10" height="10"/>
+			</s:VGroup>
+		</s:Group>
+	</s:VGroup>
+	
+	<s:VGroup width="100%" height="100%">
+		<s:Group id="groupViewNews" width="100%" height="100%" visible="false" includeInLayout="false" depth="2">
+			<!-- http://flexponential.com/2009/11/23/adding-a-background-color-to-a-spark-group/ --> 
+			<s:Rect width="100%" height="100%">
+				<s:fill><s:SolidColor color="#000000" alpha="0.85"/></s:fill>
+			</s:Rect>
+			<s:VGroup width="100%" height="100%">
+				<s:HGroup id="hGroupNewsTitle" width="100%" paddingRight="20" paddingLeft="20" paddingBottom="20" paddingTop="60">
+					<s:Label id="labelViewNews" width="100%" styleName="title" text="&#8592; News" color="#E8E8E8" click="groupViewNews.visible = false; groupViewNews.includeInLayout = false;"/>
+					<s:Spacer width="100%"/>
+					<s:BusyIndicator id="loadingNews" symbolColor="0xFFFFFF"/>
+				</s:HGroup>
+				<s:Scroller id="newsScroller" width="100%" height="100%">
+					<s:VGroup paddingBottom="20" paddingLeft="20" paddingRight="20" width="100%" height="100%">
+						<s:VGroup id="vGroupViewNews" width="100%" height="100%">
+							
+						</s:VGroup>
+						<s:Spacer id="spacerViewNewsBottom" width="10" height="10"/>
+					</s:VGroup>
+				</s:Scroller>
+			</s:VGroup>
+		</s:Group>
+	</s:VGroup>
+	
+</s:View>

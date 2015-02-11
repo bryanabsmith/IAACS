@@ -1,0 +1,605 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:View xmlns:fx="http://ns.adobe.com/mxml/2009" creationComplete="view1_creationCompleteHandler(event)"
+		xmlns:s="library://ns.adobe.com/flex/spark" xmlns:mx="library://ns.adobe.com/flex/mx" title="Home" actionBarVisible="false">
+	<fx:Script>
+		<![CDATA[
+			import mx.collections.ArrayList;
+			import mx.events.FlexEvent;
+			
+			import spark.components.SplitViewNavigator;
+			import spark.components.ViewNavigator;
+			import spark.managers.PersistenceManager;
+			
+			import spark.transitions.CrossFadeViewTransition;
+			
+			[Embed(source="../res/name.png")]
+			[Bindable]
+			public var imgName:Class;
+			
+			[Embed(source="../res/institution.png")]
+			[Bindable]
+			public var imgInstitution:Class;
+			
+			[Embed(source="../res/location.png")]
+			[Bindable]
+			public var imgLocation:Class;
+			
+			[Embed(source="../res/view.png")]
+			[Bindable]
+			public var imgView:Class;
+			
+			[Embed(source="../res/language.png")]
+			[Bindable]
+			public var imgLanguage:Class;
+			
+			[Embed(source="../res/offline.png")]
+			[Bindable]
+			public var imgOffline:Class;
+			
+			[Bindable]
+			private var titleFontSize:int;
+			
+			[Bindable]
+			private var descFontSize:int;
+			
+			[Bindable]
+			// https://gist.githubusercontent.com/DHS/1340150/raw/9e8a4dcdbc73a842cd8f0423bbba79e1e87cd79d/PHP%20Countries%20Array
+			private var countryNames:ArrayList = new ArrayList(["Afghanistan", "Albania", "Algeria", "American Samoa", "Andorra", "Angola", "Anguilla", "Antarctica", "Antigua and Barbuda", "Argentina", "Armenia", "Aruba", "Australia", "Austria", "Azerbaijan", "Bahamas", "Bahrain", "Bangladesh", "Barbados", "Belarus", "Belgium", "Belize", "Benin", "Bermuda", "Bhutan", "Bolivia", "Bosnia and Herzegowina", "Botswana", "Bouvet Island", "Brazil", "British Indian Ocean Territory", "Brunei Darussalam", "Bulgaria", "Burkina Faso", "Burundi", "Cambodia", "Cameroon", "Canada", "Cape Verde", "Cayman Islands", "Central African Republic", "Chad", "Chile", "China", "Christmas Island", "Cocos (Keeling) Islands", "Colombia", "Comoros", "Congo", "Congo, the Democratic Republic of the", "Cook Islands", "Costa Rica", "Cote d'Ivoire", "Croatia (Hrvatska)", "Cuba", "Cyprus", "Czech Republic", "Denmark", "Djibouti", "Dominica", "Dominican Republic", "East Timor", "Ecuador", "Egypt", "El Salvador", "Equatorial Guinea", "Eritrea", "Estonia", "Ethiopia", "Falkland Islands (Malvinas)", "Faroe Islands", "Fiji", "Finland", "France", "France Metropolitan", "French Guiana", "French Polynesia", "French Southern Territories", "Gabon", "Gambia", "Georgia", "Germany", "Ghana", "Gibraltar", "Greece", "Greenland", "Grenada", "Guadeloupe", "Guam", "Guatemala", "Guinea", "Guinea-Bissau", "Guyana", "Haiti", "Heard and Mc Donald Islands", "Holy See (Vatican City State)", "Honduras", "Hong Kong", "Hungary", "Iceland", "India", "Indonesia", "Iran (Islamic Republic of)", "Iraq", "Ireland", "Israel", "Italy", "Jamaica", "Japan", "Jordan", "Kazakhstan", "Kenya", "Kiribati", "Korea, Democratic People's Republic of", "Korea, Republic of", "Kuwait", "Kyrgyzstan", "Lao, People's Democratic Republic", "Latvia", "Lebanon", "Lesotho", "Liberia", "Libyan Arab Jamahiriya", "Liechtenstein", "Lithuania", "Luxembourg", "Macau", "Macedonia, The Former Yugoslav Republic of", "Madagascar", "Malawi", "Malaysia", "Maldives", "Mali", "Malta", "Marshall Islands", "Martinique", "Mauritania", "Mauritius", "Mayotte", "Mexico", "Micronesia, Federated States of", "Moldova, Republic of", "Monaco", "Mongolia", "Montserrat", "Morocco", "Mozambique", "Myanmar", "Namibia", "Nauru", "Nepal", "Netherlands", "Netherlands Antilles", "New Caledonia", "New Zealand", "Nicaragua", "Niger", "Nigeria", "Niue", "Norfolk Island", "Northern Mariana Islands", "Norway", "Oman", "Pakistan", "Palau", "Panama", "Papua New Guinea", "Paraguay", "Peru", "Philippines", "Pitcairn", "Poland", "Portugal", "Puerto Rico", "Qatar", "Reunion", "Romania", "Russian Federation", "Rwanda", "Saint Kitts and Nevis", "Saint Lucia", "Saint Vincent and the Grenadines", "Samoa", "San Marino", "Sao Tome and Principe", "Saudi Arabia", "Senegal", "Seychelles", "Sierra Leone", "Singapore", "Slovakia (Slovak Republic)", "Slovenia", "Solomon Islands", "Somalia", "South Africa", "South Georgia and the South Sandwich Islands", "Spain", "Sri Lanka", "St. Helena", "St. Pierre and Miquelon", "Sudan", "Suriname", "Svalbard and Jan Mayen Islands", "Swaziland", "Sweden", "Switzerland", "Syrian Arab Republic", "Taiwan, Province of China", "Tajikistan", "Tanzania, United Republic of", "Thailand", "Togo", "Tokelau", "Tonga", "Trinidad and Tobago", "Tunisia", "Turkey", "Turkmenistan", "Turks and Caicos Islands", "Tuvalu", "Uganda", "Ukraine", "United Arab Emirates", "United Kingdom", "United States", "United States Minor Outlying Islands", "Uruguay", "Uzbekistan", "Vanuatu", "Venezuela", "Vietnam", "Virgin Islands (British)", "Virgin Islands (U.S.)", "Wallis and Futuna Islands", "Western Sahara", "Yemen", "Yugoslavia", "Zambia", "Zimbabwe"]);
+			
+			[Bindable]
+			private var countryNamesFR:ArrayList = new ArrayList(["Afghanistan", "Afrique du Sud", "Albanie", "Allemagne", "American Samoa", "Andorra", "Angola", "Anguilla", "Antarctique", "Antigua-et-Barbuda", "Antilles néerlandaises", "Argentine", "Arménie", "Aruba", "Australia", "Autriche", "Bahamas", "Bahreïn", "Bangladesh", "Belgique", "Belize", "Bermudes", "Bhoutan", "Biélorussie", "Bosnie-Herzégovine", "Botswana", "Brazil", "Brunei Darussalam", "Burkina Faso", "Burundi", "Bénin", "Cambodge", "Cameroun", "Canada", "Cap-Vert", "Chili", "Chypre", "Cocos (Keeling ) Islands", "Colombie", "Comores", "Congo", "Congo", " la République démocratique du", "Corée", " République de", "Costa Rica", "Croatie (Hrvatska)", "Cuba", "Côte d'Ivoire", "Djibouti", "Dominique", "Egypte", "El Salvador", "Emirats arabes unis", "Equateur", "Espagne", "Estonie", "Etats-Unis", "Fidji", "France", "France métropolitaine", "Fédération de Russie", "Gabon", "Gambie", "Georgia", "Ghana", "Gibraltar", "Grenade", "Groenland", "Grèce", "Guadeloupe", "Guam", "Guatemala", "Guinée", "Guinée-Bissau", "Guyane", "Guyane française", "Haïti", "Heard et Mc Donald îles", "Honduras", "Hong Kong", "Hongrie", "Iles Marshall", "Iles Vierges (américaines)", "Indonésie", "Israël", "Italie", "Jamahiriya arabe libyenne", "Jamaica", "Jordanie", "Kazakhstan", "Kenya", "Kirghizistan", "Kiribati", "L'Algérie", "l'Arabie saoudite", "l'Azerbaïdjan", "l'Erythrée", "l'Ethiopie", "l'Inde", "l'Irak", "l'Iran (République islamique d ')", "l'Irlande", "l'Islande", "l'Ouzbékistan", "l'île Bouvet", "l'île Christmas", "l'île de Norfolk", "la Barbade", "la Bolivie", "la Bulgarie", "la Chine", "la Finlande", "la Géorgie du Sud et les îles Sandwich du Sud", "la Lettonie", "la Malaisie", "la Mauritanie", "la Mongolie", "la Namibie", "la Norvège", "la Papouasie-Nouvelle-Guinée", "La Roumanie", "la Slovaquie (République slovaque)", "la Somalie", "la Suisse", "La Suède", "La Tanzanie", " République-Unie de", "la Thaïlande", "la Zambie", "Lao", " République populaire démocratique Koweït", "le Danemark", "le Japon", "Le Malawi", "le Mozambique", "le Nigeria", "le Turkménistan", "le Venezuela", "les îles Caïmans", "Lesotho", "Liban", "Liberia", "Liechtenstein", "Lituanie", "Luxembourg", "Macao", "Macédoine", " Ex-République yougoslave de", "Madagascar", "Maldives", "Mali", "Malte", "Maroc", "Martinique", "Mauritius", "Mayotte", "Mexico", "Micronésie ", " les États fédérés de", "Monaco", "Montserrat", "Myanmar", "Nauru", "Nepal", "Nicaragua", "Niger", "Nioué", "Nouvelle-Calédonie", "Nouvelle-Z��lande", "Oman", "Ouganda", "Pakistan", "Palau", "Panama", "Paraguay", "Pays-Bas", "Philippines", "Pitcairn", "Pologne", "Polynésie française", "Portugal", "Puerto Rico", "Pérou", "Qatar", "Royaume-Uni", "Rwanda", "République arabe syrienne", "République Centrafricaine", "République de Corée", " République populaire démocratique de", "République de Moldova", "République dominicaine", "République tchèque", "Réunion", "Sahara Occidental", "Saint-Kitts-et-Nevis", "Saint-Siège (Cité du Vatican)", "Saint-Vincent-et-les Grenadines", "Sainte-Lucie", "Samoa", "San Marino", "Sao Tomé et Principe", "Seychelles", "Sierra Leone", "Singapour", "Slovénie", "Soudan", "Sri Lanka", "St. Helena", "St. Pierre et Miquelon", "Suriname", "Svalbard et Jan Mayen", "Swaziland", "Sénégal", "Tadjikistan", "Taiwan", " province de Chine", "Tchad", "Terres australes françaises", "Territoire britannique de l'océan Indien", "Timor oriental", "Togo", "Tokélaou", "Tonga", "Trinité-et-Tobago", "Tunisie", "Turquie", "Tuvalu", "Ukraine", "Uruguay", "Vanuatu", "Vietnam", "Yougoslavie", "Yémen", "Zimbabwe", "équatoriale Guinée", "États-Unis Îles mineures éloignées", "îles Cook", "îles Falkland (Malvinas)", "îles Féroé", "Îles Mariannes du Nord", "îles Salomon", "îles Turques et Caïques", "Îles Vierges (britanniques)", "îles Wallis et Futuna"]);
+			
+			[Bindable]
+			// https://gist.githubusercontent.com/DHS/1340150/raw/9e8a4dcdbc73a842cd8f0423bbba79e1e87cd79d/PHP%20Countries%20Array
+			private var viewNames:ArrayList = new ArrayList(["News", "Home"]);
+			
+			[Bindable]
+			// https://gist.githubusercontent.com/DHS/1340150/raw/9e8a4dcdbc73a842cd8f0423bbba79e1e87cd79d/PHP%20Countries%20Array
+			private var viewNamesFR:ArrayList = new ArrayList(["Nouvelles", "Se Rapprocher"]);
+			
+			[Bindable]
+			private var refreshTimes:ArrayList = new ArrayList(["None", "3", "10", "30"]);
+			
+			private var p:PersistenceManager = new PersistenceManager();
+			
+			private var isTablet:Boolean = false;
+			
+			private var language:String = "en";
+			
+			private var selectedLanguage:String;
+			
+			private var fadeTrans:CrossFadeViewTransition = new CrossFadeViewTransition();
+			
+			protected function view1_creationCompleteHandler(event:FlexEvent):void
+			{
+				getLanguageSettings();
+				
+				if (Capabilities.os.substring(0,2) == "iP") { // iPhone, iPad and iPod Touch padding at the top
+					hGroupActionBarContents.paddingTop = 40;
+					vGroupNoConnection.paddingTop = 40;
+				} else {
+					hGroupActionBarContents.paddingTop = 0;
+				}
+				
+				var colourScheme:String = p.getProperty("colourScheme") as String;
+				var colourSchemeLabel:String = p.getProperty("colourSchemeLabel") as String;
+				
+				// http://forum.starling-framework.org/topic/detect-device-type-phone-tablet
+				var w:Number = Capabilities.screenResolutionX;
+				var h:Number = Capabilities.screenResolutionY;
+				var dpi:Number = Capabilities.screenDPI;
+				
+				var screenInches:Number = Math.round(Math.sqrt(Math.pow(w/dpi,2)+Math.pow(h/dpi,2)) * 100) / 100;
+				
+				if (screenInches > 7.5) {
+					isTablet = true;
+				}
+				
+				if (isTablet == true) {
+					/*labelConfigureApp.visible = false;
+					labelConfigureApp.includeInLayout = false;*/
+					groupCardFirstView.visible = false;
+					groupCardFirstView.includeInLayout = false;
+					lineCardFirstView.visible = false;
+					lineCardFirstView.includeInLayout = false;
+				} 
+				
+				if (language == "en") {
+					backgroundBackgroundEnglish.color = 0xFFFFFF;
+					labelEnglish.setStyle("color", 0x801332);
+				}
+				
+				/*if (colourScheme == null) {
+				backgroundActionBarTitle.color = 0x33B5E5;
+				labelActionBarTitle.setStyle("color", 0xFFFFFF);
+				} else {
+				backgroundActionBarTitle.color = uint(colourScheme);
+				labelActionBarTitle.setStyle("color", colourSchemeLabel);
+				}*/
+				
+				/*var fontSize:String = p.getProperty("fontSize") as String;
+				if (fontSize == null) {
+				titleFontSize = 28;
+				descFontSize = int(titleFontSize)-8;
+				} else {
+				titleFontSize = int(fontSize);
+				descFontSize = int(titleFontSize)-8;
+				}*/
+				
+				/*if (AndroidFullScreen.isSupported) {
+				AndroidFullScreen.showUnderSystemUI();
+				hGroupActionBarContents.paddingTop = 30;
+				}*/
+				
+				var selectedCountryName:String = p.getProperty("countryName") as String;
+				var selectedCountryIndex:int = p.getProperty("countryIndex") as int;
+				/*var selectedRefreshName:String = p.getProperty("refreshName") as String;
+				var selectedRefreshIndex:int = p.getProperty("refreshIndex") as int;*/
+				var name:String = p.getProperty("name") as String;
+				var institution:String = p.getProperty("institution") as String;
+				var selectedFirstViewAppName:String = p.getProperty("firstViewAppName") as String;
+				var selectedFirstViewAppIndex:int = p.getProperty("firstViewAppIndex") as int;
+				
+				if (selectedCountryName == null) {
+					selectedCountryName = "Afghanistan";
+				} else {
+					selectedCountryName = p.getProperty("countryName").toString()
+				}
+				
+				if (selectedCountryIndex == 0) {
+					selectedCountryIndex = 0;
+				} else {
+					selectedCountryIndex = int(p.getProperty("countryIndex"));
+				}
+				
+				
+				if (selectedFirstViewAppName == null) {
+					selectedFirstViewAppName = "News";
+				} else {
+					selectedFirstViewAppName = p.getProperty("firstViewAppName").toString();
+				}
+				
+				if (selectedFirstViewAppIndex == 0) {
+					selectedFirstViewAppIndex = 0;
+				} else {
+					selectedFirstViewAppIndex = int(p.getProperty("firstViewAppIndex"));
+				}
+				/*if (selectedRefreshName == null) {
+				selectedRefreshName = "None";
+				} else {
+				selectedRefreshName = p.getProperty("refreshName").toString()
+				}*/
+				
+				/*if (selectedRefreshIndex == 0) {
+				selectedRefreshIndex = 0;
+				} else {
+				selectedRefreshIndex = int(p.getProperty("refreshIndex"));
+				}*/
+				
+				if (name == null) {
+					name = "";
+				} else {
+					name = p.getProperty("name").toString();
+				}
+				
+				if (institution == null) {
+					institution = "";
+				} else {
+					institution = p.getProperty("institution").toString();
+				}
+				
+				if (selectedLanguage == "fr") {
+					backgroundBackgroundEnglish.color = 0x801332;
+					labelEnglish.setStyle("color", 0xFFFFFF);
+					backgroundBackgroundFrench.color = 0xFFFFFF;
+					labelFrench.setStyle("color", 0x801332);
+					
+				} else {
+					backgroundBackgroundEnglish.color = 0xFFFFFF;
+					labelEnglish.setStyle("color", 0x801332);
+					backgroundBackgroundFrench.color = 0x801332;
+					labelFrench.setStyle("color", 0xFFFFFF);
+				}
+				
+				countryList.selectedItem = selectedCountryName;
+				countryList.ensureIndexIsVisible(int(selectedCountryIndex));
+				
+				viewList.selectedItem = selectedFirstViewAppName;
+				viewList.ensureIndexIsVisible(int(selectedFirstViewAppIndex));
+				
+				/*conversationRefreshList.selectedItem = selectedRefreshName;
+				conversationRefreshList.ensureIndexIsVisible(int(selectedRefreshIndex));*/
+				textName.text = name;
+				textInstitution.text = institution;
+			}
+			
+			private function getLanguageSettings():void {
+				var languageURL:URLRequest;
+				selectedLanguage = p.getProperty("language") as String;
+				if (selectedLanguage == "fr") {
+					languageURL = new URLRequest("../res/translations/fr.xml");
+					countryList.dataProvider = countryNamesFR;
+					viewList.dataProvider = viewNamesFR;
+				} else {
+					languageURL = new URLRequest("../res/translations/en.xml");
+					countryList.dataProvider = countryNames;
+					viewList.dataProvider = viewNames;
+				}
+				
+				var licenceLoader:URLLoader = new URLLoader();
+				licenceLoader.addEventListener(Event.COMPLETE, displayText);
+				
+				function displayText(event:Event):void {
+					var fileContents:XML = new XML(event.currentTarget.data);
+					for (var item:String in fileContents.config) {
+						labelActionBarTitle.text = "\u2190 " + fileContents.config.@title[item];
+						labelNameTitle.text = fileContents.config.@nameTitle[item];
+						textName.prompt = fileContents.config.@namePrompt[item];
+						labelInstitutionTitle.text = fileContents.config.@instTitle[item];
+						textInstitution.prompt = fileContents.config.@instPrompt[item];
+						labelCountryTitle.text = fileContents.config.@countryTitle[item];
+						labelLanguageTitle.text = fileContents.config.@languageTitle[item];
+						labelFirstViewTitle.text = fileContents.config.@firstViewTitle[item];
+						
+						labelConfigureApp.text = fileContents.config.@applicationTitle[item];
+						labelConfigurePersonal.text = fileContents.config.@personalTitle[item];
+					}
+				}
+				
+				licenceLoader.load(languageURL);
+			}
+			
+			private function saveProperties():void {
+				p.setProperty("name", textName.text);
+				p.setProperty("institution", textInstitution.text);
+				p.setProperty("countryName", countryList.selectedItem);
+				p.setProperty("countryIndex", countryList.selectedIndex);
+				p.setProperty("firstViewAppName", viewList.selectedItem);
+				p.setProperty("firstViewAppIndex", viewList.selectedIndex);
+				
+				/*p.setProperty("refreshName", conversationRefreshList.selectedItem);
+				p.setProperty("refreshIndex", conversationRefreshList.selectedIndex);*/
+				p.setProperty("configured", "true");
+				p.save();
+			}
+			
+			protected function groupEnglish_clickHandler(event:MouseEvent):void
+			{
+				backgroundBackgroundEnglish.color = 0xFFFFFF;
+				labelEnglish.setStyle("color", 0x801332);
+				backgroundBackgroundFrench.color = 0x801332;
+				labelFrench.setStyle("color", 0xFFFFFF);
+				/*labelLanguageMessage.visible = true;
+				labelLanguageMessage.includeInLayout = true;*/
+				p.setProperty("language", "en");
+				countryList.dataProvider = countryNames;
+				getLanguageSettings();
+				
+				if (isTablet == true) {
+					// http://help.adobe.com/en_US/flex/mobileapps/WSa367498dc1175407-5e4576591324aa78a9f-8000.html
+					var splitNavigator:SplitViewNavigator = navigator.parentNavigator as SplitViewNavigator;
+					var aboutNavigator:ViewNavigator = splitNavigator.getViewNavigatorAt(0) as ViewNavigator;
+					aboutNavigator.pushView(Home, null, null, fadeTrans);
+					//aboutNavigator.pushView(Home, null, null, null);
+				}
+			}
+			
+			protected function groupFrench_clickHandler(event:MouseEvent):void
+			{
+				//var fadeFrTrans:CrossFadeViewTransition = new CrossFadeViewTransition();
+				
+				//var fadeFrTrans:CrossFadeViewTransition = new CrossFadeViewTransition(); 
+				
+				backgroundBackgroundEnglish.color = 0x801332;
+				labelEnglish.setStyle("color", 0xFFFFFF);
+				backgroundBackgroundFrench.color = 0xFFFFFF;
+				labelFrench.setStyle("color", 0x801332);
+				/*labelLanguageMessage.visible = true;
+				labelLanguageMessage.includeInLayout = true;*/
+				p.setProperty("language", "fr");
+				countryList.dataProvider = countryNamesFR;
+				getLanguageSettings();
+				
+				if (isTablet == true) {
+					// http://help.adobe.com/en_US/flex/mobileapps/WSa367498dc1175407-5e4576591324aa78a9f-8000.html
+					var splitNavigator:SplitViewNavigator = navigator.parentNavigator as SplitViewNavigator;
+					var aboutNavigator:ViewNavigator = splitNavigator.getViewNavigatorAt(0) as ViewNavigator;
+					aboutNavigator.pushView(Home, null, null, fadeTrans);
+					//aboutNavigator.pushView(Home, null, null, null);
+				}
+			}
+			
+			protected function groupOffline_clickHandler(event:MouseEvent):void
+			{
+				if (labelOffline.text == "Disabled") {
+					p.setProperty("offline", "enabled");
+					backgroundBackgroundOffline.color = 0xFFFFFF;
+					labelOffline.setStyle("color", 0x801332);
+					labelOffline.text = "Enabled";
+				} else {
+					p.setProperty("offline", "disabled");
+					backgroundBackgroundOffline.color = 0x801332;
+					labelOffline.setStyle("color", 0xFFFFFF);
+					labelOffline.text = "Disabled";
+				}
+			}
+			
+		]]>
+	</fx:Script>
+	
+	<fx:Declarations>
+		<s:SlideViewTransition id="slideTransition" duration="300" direction="up" transitionControlsWithContent="false"/>
+	</fx:Declarations>
+	
+	<s:VGroup id="vGroupMain" height="100%" width="100%" gap="0">
+		<s:Group id="groupActionBarTitle" width="100%">
+			<s:Rect width="100%" height="100%">
+				<s:fill><s:SolidColor id="backgroundActionBarTitle" color="#801332"/></s:fill>
+			</s:Rect>
+			<s:HGroup id="hGroupActionBarContents" width="100%" verticalAlign="middle" height="100%" paddingLeft="10" paddingRight="10">
+				<s:Label id="labelActionBarTitle" maxDisplayedLines="1" text="&#8592; Configure" color="#FFFFFF" styleName="title" paddingTop="20" paddingBottom="20" click="navigator.popToFirstView();"/>
+				<s:Spacer width="100%"/>
+			</s:HGroup>
+		</s:Group>
+		
+		<!-- http://help.adobe.com/en_US/flex/using/WS422719A4-7849-4921-AF39-57FF567B483B.html#WS063B0491-B7AB-4b00-A39F-E44310BCB0E0 -->
+		<!--<s:SkinnableContainer id="backgroundContainer" height="100%" width="100%" skinClass="skins.BackPic">-->
+		
+		<s:VGroup id="vGroupBackground" width="100%" height="100%" gap="0">
+			
+			<s:Group id="groupBackground" width="100%" height="100%">
+				
+				<s:Rect width="100%" height="100%">
+					<!--<s:stroke>
+					<s:SolidColorStroke id="colourActionBarTitleBorder" color="#000000" weight="2" />
+					</s:stroke>-->
+					<s:fill><s:SolidColor id="backgroundBackground" color="#E8E8E8"/></s:fill>
+				</s:Rect>
+				
+				<s:Scroller id="mainScroller" width="100%" height="100%">
+					
+					<s:VGroup id="vGroupContent" height="100%" width="100%" gap="0" paddingRight="20" paddingLeft="20" paddingTop="20" paddingBottom="20">
+						
+						<s:Label id="labelConfigurePersonal" maxDisplayedLines="1" text="Personal" color="#000000" styleName="title"/>
+						
+						<s:Spacer height="20"/>
+						
+						<s:Group id="groupCardName" width="100%">
+							<s:Rect width="100%" height="100%">
+								<!--<s:stroke>
+								<s:SolidColorStroke id="colourActionBarTitleBorder" color="#000000" weight="2" />
+								</s:stroke>-->
+								<s:fill><s:SolidColor id="backgroundCardName" color="#FFFFFF"/></s:fill>
+							</s:Rect>
+							
+							<s:HGroup width="100%" height="100%" paddingRight="10" paddingLeft="10" paddingTop="10" paddingBottom="10" verticalAlign="middle">
+								<s:Image id="imageName" height="{labelActionBarTitle.height - 20}" width="{labelActionBarTitle.height - 20}" source="{imgName}" smooth="true" smoothingQuality="high"/>
+								<s:VGroup width="100%" height="100%" paddingLeft="30">
+									<s:Label id="labelNameTitle" text="Name" styleName="title" width="100%" paddingTop="10" paddingBottom="10"/>
+									<s:TextInput id="textName" borderVisible="false" prompt="Name" width="100%" change="saveProperties()"/>
+									<s:Line width="100%">
+										<s:stroke>
+											<s:SolidColorStroke color="0x801332" weight="3"/>
+										</s:stroke>
+									</s:Line>
+								</s:VGroup>
+							</s:HGroup>
+						</s:Group>
+						<s:Line width="100%">
+							<s:stroke>
+								<s:SolidColorStroke color="0xB0B0B0" weight="2"/>
+							</s:stroke>
+						</s:Line>
+						
+						<s:Spacer height="20"/>
+						
+						<s:Group id="groupCardInstitution" width="100%">
+							<s:Rect width="100%" height="100%">
+								<!--<s:stroke>
+								<s:SolidColorStroke id="colourActionBarTitleBorder" color="#000000" weight="2" />
+								</s:stroke>-->
+								<s:fill><s:SolidColor id="backgroundCardInstitution" color="#FFFFFF"/></s:fill>
+							</s:Rect>
+							<s:HGroup width="100%" height="100%" paddingRight="10" paddingLeft="10" paddingTop="10" paddingBottom="10" verticalAlign="middle">
+								<s:Image id="imageInstitution" height="{labelActionBarTitle.height - 20}" width="{labelActionBarTitle.height - 20}" source="{imgInstitution}" smooth="true" smoothingQuality="high"/>
+								<s:VGroup width="100%" height="100%" paddingLeft="30">
+									<s:Label id="labelInstitutionTitle" text="Institution" styleName="title" width="100%" paddingTop="10" paddingBottom="10"/>
+									<s:TextInput id="textInstitution" borderVisible="false" prompt="University" width="100%" change="saveProperties()"/>
+									<s:Line width="100%">
+										<s:stroke>
+											<s:SolidColorStroke color="0x801332" weight="3"/>
+										</s:stroke>
+									</s:Line>
+								</s:VGroup>
+							</s:HGroup>
+						</s:Group>
+						<s:Line width="100%">
+							<s:stroke>
+								<s:SolidColorStroke color="0xB0B0B0" weight="2"/>
+							</s:stroke>
+						</s:Line>
+						
+						<s:Spacer height="20"/>
+						
+						<s:Group id="groupCardCountry" width="100%">
+							<s:Rect width="100%" height="100%">
+								<!--<s:stroke>
+								<s:SolidColorStroke id="colourActionBarTitleBorder" color="#000000" weight="2" />
+								</s:stroke>-->
+								<s:fill><s:SolidColor id="backgroundCardCountry" color="#FFFFFF"/></s:fill>
+							</s:Rect>
+							<s:HGroup width="100%" height="100%" paddingRight="10" paddingLeft="10" paddingTop="10" paddingBottom="10" verticalAlign="middle">
+								<s:Image id="imageCountry" height="{labelActionBarTitle.height - 20}" width="{labelActionBarTitle.height - 20}" source="{imgLocation}" smooth="true" smoothingQuality="high"/>
+								<s:VGroup width="100%" height="100%" paddingLeft="30">
+									<s:Label id="labelCountryTitle" text="Country" styleName="title" width="100%" paddingTop="10" paddingBottom="10"/>
+									<s:List width="100%" id="countryList" contentBackgroundColor="#FFFFFF" dataProvider="{countryNames}" height="500" selectionColor="0xF5A9A9" change="saveProperties()"/>
+								</s:VGroup>
+							</s:HGroup>
+						</s:Group>
+						<s:Line width="100%">
+							<s:stroke>
+								<s:SolidColorStroke color="0xB0B0B0" weight="2"/>
+							</s:stroke>
+						</s:Line>
+						
+						<s:Spacer height="40"/>
+						
+						<s:Label id="labelConfigureApp" maxDisplayedLines="1" text="Application" color="#000000" styleName="title"/>
+						
+						<s:Spacer height="20"/>
+						
+						<s:Group id="groupCardLanguageView" width="100%">
+							<s:Rect width="100%" height="100%">
+								<!--<s:stroke>
+								<s:SolidColorStroke id="colourActionBarTitleBorder" color="#000000" weight="2" />
+								</s:stroke>-->
+								<s:fill><s:SolidColor id="backgroundCardLanguageView" color="#FFFFFF"/></s:fill>
+							</s:Rect>
+							<s:HGroup width="100%" height="100%" paddingRight="10" paddingLeft="10" paddingTop="10" paddingBottom="10" verticalAlign="middle">
+								<s:Image id="imageLanguage" height="{labelActionBarTitle.height - 20}" width="{labelActionBarTitle.height - 20}" source="{imgLanguage}" smooth="true" smoothingQuality="high"/>
+								<s:VGroup width="100%" height="100%" paddingLeft="30">
+									<s:Label id="labelLanguageTitle" text="Language" styleName="title" width="100%" paddingTop="10" paddingBottom="10"/>
+									<s:HGroup width="100%" gap="0" paddingRight="10" paddingLeft="10" paddingTop="10" paddingBottom="10" verticalAlign="middle">
+										<s:Group id="groupEnglish" width="100%" click="groupEnglish_clickHandler(event)">
+											<s:Rect width="100%" height="100%" topLeftRadiusX="15" topLeftRadiusY="15" bottomLeftRadiusX="15" bottomLeftRadiusY="15">
+												<s:stroke>
+													<s:SolidColorStroke id="colourActionBarTitleBorderEnglish" color="#801332" weight="2"/>
+												</s:stroke>
+												<s:fill>
+													<s:SolidColor id="backgroundBackgroundEnglish" color="#801332"/>
+												</s:fill>
+											</s:Rect>
+											<s:Label id="labelEnglish" text="English" color="#FFFFFF" paddingBottom="20" paddingLeft="20" paddingRight="20" paddingTop="20" styleName="desc" width="100%" textAlign="center"/>
+										</s:Group>
+										
+										<s:Group id="groupFrench" width="100%" click="groupFrench_clickHandler(event)">
+											<s:Rect width="100%" height="100%" topRightRadiusX="15" topRightRadiusY="15" bottomRightRadiusX="15" bottomRightRadiusY="15">
+												<s:stroke>
+													<s:SolidColorStroke id="colourActionBarTitleBorderFrench" color="#801332" weight="2"/>
+												</s:stroke>
+												<s:fill>
+													<s:SolidColor id="backgroundBackgroundFrench" color="#801332"/>
+												</s:fill>
+											</s:Rect>
+											<s:Label id="labelFrench" text="Français" color="#FFFFFF" paddingBottom="20" paddingLeft="20" paddingRight="20" paddingTop="20" styleName="desc" width="100%" textAlign="center"/>
+										</s:Group>
+									</s:HGroup>
+									<s:Label id="labelLanguageMessage" text="The application needs to be restarted for the language setting to take effect." styleName="desc" width="100%" paddingTop="10" paddingBottom="10" visible="false" includeInLayout="false"/>
+								</s:VGroup>
+							</s:HGroup>
+						</s:Group>
+						<s:Line width="100%" id="lineCardLanguageView">
+							<s:stroke>
+								<s:SolidColorStroke color="0xB0B0B0" weight="2"/>
+							</s:stroke>
+						</s:Line>
+						
+						<s:Spacer height="20"/>
+						
+						<s:Group id="groupCardFirstView" width="100%">
+							<s:Rect width="100%" height="100%">
+								<!--<s:stroke>
+								<s:SolidColorStroke id="colourActionBarTitleBorder" color="#000000" weight="2" />
+								</s:stroke>-->
+								<s:fill><s:SolidColor id="backgroundCardFirstView" color="#FFFFFF"/></s:fill>
+							</s:Rect>
+							<s:HGroup width="100%" height="100%" paddingRight="10" paddingLeft="10" paddingTop="10" paddingBottom="10" verticalAlign="middle">
+								<s:Image id="imageFirstView" height="{labelActionBarTitle.height - 20}" width="{labelActionBarTitle.height - 20}" source="{imgView}" smooth="true" smoothingQuality="high"/>
+								<s:VGroup width="100%" height="100%" paddingLeft="30">
+									<s:Label id="labelFirstViewTitle" text="First Screen" styleName="title" width="100%" paddingTop="10" paddingBottom="10"/>
+									<s:List width="100%" id="viewList" contentBackgroundColor="#FFFFFF" dataProvider="{viewNames}" height="200" selectionColor="0xF5A9A9"/>
+								</s:VGroup>
+							</s:HGroup>
+						</s:Group>
+						<s:Line width="100%" id="lineCardFirstView">
+							<s:stroke>
+								<s:SolidColorStroke color="0xB0B0B0" weight="2"/>
+							</s:stroke>
+						</s:Line>
+
+						<s:Spacer height="20"/>
+						
+						<s:Group id="groupCardOffline" width="100%">
+							<s:Rect width="100%" height="100%">
+								<!--<s:stroke>
+								<s:SolidColorStroke id="colourActionBarTitleBorder" color="#000000" weight="2" />
+								</s:stroke>-->
+								<s:fill><s:SolidColor id="backgroundCardOffline" color="#FFFFFF"/></s:fill>
+							</s:Rect>
+							
+							<s:HGroup width="100%" height="100%" paddingRight="10" paddingLeft="10" paddingTop="10" paddingBottom="10" verticalAlign="middle">
+								<s:Image id="imageOffline" height="{labelActionBarTitle.height - 20}" width="{labelActionBarTitle.height - 20}" source="{imgOffline}" smooth="true" smoothingQuality="high"/>
+								<s:VGroup width="100%" height="100%" paddingLeft="30">
+									<s:Label id="labelOfflineTitle" text="Offline" styleName="title" width="100%" paddingTop="10" paddingBottom="10"/>
+									<s:Group id="groupOffline" width="100%" click="groupOffline_clickHandler(event)">
+										<s:Rect width="100%" height="100%" topLeftRadiusX="15" topLeftRadiusY="15" bottomLeftRadiusX="15" bottomLeftRadiusY="15" topRightRadiusX="15" topRightRadiusY="15" bottomRightRadiusX="15" bottomRightRadiusY="15">
+											<s:stroke>
+												<s:SolidColorStroke id="colourActionBarTitleBorderOffline" color="#801332" weight="2"/>
+											</s:stroke>
+											<s:fill>
+												<s:SolidColor id="backgroundBackgroundOffline" color="#801332"/>
+											</s:fill>
+										</s:Rect>
+										<s:Label id="labelOffline" text="Disabled" color="#FFFFFF" paddingBottom="20" paddingLeft="20" paddingRight="20" paddingTop="20" styleName="desc" width="100%" textAlign="center"/>
+									</s:Group>
+								</s:VGroup>
+							</s:HGroup>
+						</s:Group>
+						<s:Line width="100%">
+							<s:stroke>
+								<s:SolidColorStroke color="0xB0B0B0" weight="2"/>
+							</s:stroke>
+						</s:Line>
+						
+						<!--<s:Spacer height="20"/>
+						
+						<s:Group id="groupCardConversationRefresh" width="100%">
+						<s:Rect width="100%" height="100%">
+						&lt;!&ndash;<s:stroke>
+						<s:SolidColorStroke id="colourActionBarTitleBorder" color="#000000" weight="2" />
+						</s:stroke>&ndash;&gt;
+						<s:fill><s:SolidColor id="backgroundCardConversationRefresh" color="#FFFFFF"/></s:fill>
+						</s:Rect>
+						<s:HGroup width="100%" height="100%" paddingRight="10" paddingLeft="10" paddingTop="10" paddingBottom="10" verticalAlign="middle">
+						<s:Image id="imageConversationRefresh" height="{labelActionBarTitle.height - 20}" width="{labelActionBarTitle.height - 20}" source="{imgRefresh}" smooth="true" smoothingQuality="high"/>
+						<s:VGroup width="100%" height="100%" paddingLeft="30">
+						<s:Label id="labelConversationRefreshTitle" text="Messages Refresh Time" styleName="title" width="100%" paddingTop="10" paddingBottom="10"/>
+						<s:Label id="labelConversationRefreshDesc" text="This value determines if the messages page automatically refreshes and how often it does so." styleName="desc" color="#888888" width="100%" paddingBottom="10"/>
+						<s:List width="100%" id="conversationRefreshList" contentBackgroundColor="#FFFFFF" dataProvider="{refreshTimes}" height="300"/>
+						</s:VGroup>
+						</s:HGroup>
+						</s:Group>
+						<s:Line width="100%">
+						<s:stroke>
+						<s:SolidColorStroke color="0xB0B0B0" weight="2"/>
+						</s:stroke>
+						</s:Line>-->
+						
+					</s:VGroup>
+					
+				</s:Scroller>
+				
+			</s:Group>
+			
+		</s:VGroup>
+		<!--</s:SkinnableContainer>-->
+	</s:VGroup>
+	
+	<s:VGroup width="100%" height="100%">
+		<s:Group id="groupNetworkError" width="100%" visible="false" includeInLayout="false" depth="2">
+			<!-- http://flexponential.com/2009/11/23/adding-a-background-color-to-a-spark-group/ --> 
+			<s:Rect width="100%" height="100%">
+				<s:fill><s:SolidColor color="#B80000" alpha="0.9"/></s:fill>
+			</s:Rect>
+			<s:VGroup id="vGroupNoConnection" paddingBottom="10" paddingLeft="10" paddingRight="10" width="100%">
+				<s:Spacer id="spacerNetworkTop" width="10" height="10"/>
+				<s:HGroup id="hGroupConnectionProblem" width="100%">
+					<s:Label id="labelNetworkError" height="100%" width="100%" color="#FFFFFF"
+							 text="No network connection." verticalAlign="middle" textAlign="center"/>
+				</s:HGroup>
+				<s:Spacer id="spacerNetworkBottom" width="10" height="10"/>
+			</s:VGroup>
+		</s:Group>
+	</s:VGroup>
+	
+</s:View>

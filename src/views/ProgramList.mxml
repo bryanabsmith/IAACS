@@ -1,0 +1,468 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:View xmlns:fx="http://ns.adobe.com/mxml/2009" creationComplete="view1_creationCompleteHandler(event)"
+		xmlns:s="library://ns.adobe.com/flex/spark" title="Home" actionBarVisible="false">
+	<fx:Script>
+		<![CDATA[
+			import mx.events.FlexEvent;
+			import mx.graphics.SolidColorStroke;
+			
+			import spark.managers.PersistenceManager;
+			import spark.primitives.Line;
+			
+			import air.net.URLMonitor;
+			
+			//import com.mesmotronic.ane.AndroidFullScreen;
+			
+			[Embed(source="../res/program.png")] 
+			[Bindable] 
+			public var imgProgram:Class;
+			
+			[Bindable]
+			private var titleFontSize:int;
+			
+			[Bindable]
+			private var descFontSize:int;
+			
+			private var urlMonitor:URLMonitor;
+			
+			private var p:PersistenceManager = new PersistenceManager();
+			
+			private var url:String = "http://bryanabsmith.com/iaacs/app/program_list.xml";
+			
+			private var dateValue:int = 0;
+			
+			private var roomTitle:String = "";
+			private var backTitle:String = "";
+			private var monthTitle:String = "";
+			
+			protected function view1_creationCompleteHandler(event:FlexEvent):void
+			{
+				trace(Capabilities.os.substring(0,2));
+				if (Capabilities.os.substring(0,2) == "iP") { // iPhone, iPad and iPod Touch padding at the top
+					hGroupActionBarContents.paddingTop = 40;
+					vGroupNoConnection.paddingTop = 40;
+				} else {
+					hGroupActionBarContents.paddingTop = 0;
+				}
+				dateValue = int(data[0]);
+				
+				var colourScheme:String = p.getProperty("colourScheme") as String;
+				var colourSchemeLabel:String = p.getProperty("colourSchemeLabel") as String;
+				
+				var languageURL:URLRequest;
+				var selectedLanguage:String = p.getProperty("language") as String;
+				if (selectedLanguage == "fr") {
+					languageURL = new URLRequest("../res/translations/fr.xml");
+				} else {
+					languageURL = new URLRequest("../res/translations/en.xml");
+				}
+				
+				var licenceLoader:URLLoader = new URLLoader();
+				licenceLoader.addEventListener(Event.COMPLETE, displayText);
+				licenceLoader.load(languageURL);
+				
+				function displayText(event:Event):void {
+					var fileContents:XML = new XML(event.currentTarget.data);
+					for (var item:String in fileContents.programList) {
+						roomTitle = fileContents.programList.@roomTitle[item];
+						backTitle = fileContents.programList.@backTitle[item];
+						monthTitle = fileContents.programList.@monthTitle[item];
+					}
+				}
+				
+				var urlRequest:URLRequest = new URLRequest("http://www.bryanabsmith.com");
+				urlMonitor = new URLMonitor(urlRequest);
+				urlMonitor.addEventListener(StatusEvent.STATUS, onStatusEvent);
+				urlMonitor.start();
+			}
+			
+			private function onStatusEvent(event:StatusEvent):void
+			{
+				var evt:StatusEvent = event;
+				if (evt.code == "Service.available") {
+					groupNetworkError.visible = false;
+					groupNetworkError.includeInLayout = false;
+					mainScroller.enabled = true;
+					
+					var myLoader:URLLoader = new URLLoader();
+					if (data[0] == "0") {
+						labelActionBarTitle.text = "\u2190 " + String(data[1]);
+						myLoader.addEventListener(Event.COMPLETE, showSearchResults);	
+					} else {
+						myLoader.addEventListener(Event.COMPLETE, showProgramList);
+					}
+					myLoader.load(new URLRequest(url));
+				} else {
+					groupNetworkError.visible = true;
+					groupNetworkError.includeInLayout = true;
+					mainScroller.enabled = false;
+				}
+			}
+			
+			protected function showProgramList(event:Event):void
+			{
+				var curTime:String = "";
+				
+				if(data[0] != "0") {
+					labelActionBarTitle.text = "\u2190 " + monthTitle + " " + data[0];
+				} else {
+					labelActionBarTitle.text = "\u2190 " + backTitle;
+				}
+				
+				var fileContents:XML = new XML(event.currentTarget.data);
+				var count:int = 0;
+				var records:Array = [];
+				var urls:Array = [];
+				
+				var pName:String = "";
+				var pTitle:String = "";
+				var pDate:String = "";
+				var pTime:String = "";
+				var pRoom:String = "";
+				var pAbstract:String = "";
+				
+				for (var item:String in fileContents.item) {
+					
+					pName = fileContents.item.@name[item];
+					pTitle = fileContents.item.@title[item];
+					pDate = fileContents.item.@date[item];
+					pTime = fileContents.item.@time[item];
+					pRoom = fileContents.item.@room[item];
+					pAbstract = fileContents.item.@abstract[item];
+					
+					if (pDate == String(dateValue)) {
+						var groupProgramCard:Group = new Group();
+						var programRect:Rect = new Rect();
+						var programStrokeColour:SolidColorStroke = new SolidColorStroke();
+						var programFill:SolidColor = new SolidColor();
+						var programLineColour:SolidColorStroke = new SolidColorStroke();
+						var programLine:Line = new Line();
+						var vGroupProgram:VGroup = new VGroup();
+						var vGroupInfo:VGroup = new VGroup();
+						var bottomSpacer:Spacer = new Spacer();
+						
+						var name:Label = new Label();
+						var title:Label = new Label();
+						var details:Label = new Label();
+						var call:Label = new Label();
+						var web:Label = new Label();
+						
+						groupProgramCard.percentWidth = 100;
+						//groupBookCard.percentHeight = 10;
+						
+						programRect.percentWidth = 100;
+						programRect.percentHeight = 100;							
+						
+						programStrokeColour.color = 0xFFFFFF;
+						programStrokeColour.weight = 2;
+						programRect.stroke = programStrokeColour;
+						
+						programFill.color = 0xFFFFFF;
+						programRect.fill = programFill;
+						
+						groupProgramCard.addElement(programRect);
+						
+						programLine.percentWidth = 100;
+						programLineColour.color = 0xB0B0B0;
+						programLineColour.weight = 2;
+						programLine.stroke = programLineColour;
+						
+						records[count] = new HGroup();
+						// http://stackoverflow.com/a/1046147
+						records[count].percentWidth = 100;
+						records[count].verticalAlign = "middle";
+						
+						vGroupProgram.percentWidth = 100;
+						//vGroupProgram.height = 120;
+						vGroupProgram.paddingTop = 10;
+						vGroupProgram.paddingBottom = 10;
+						vGroupProgram.paddingLeft = 10;
+						vGroupProgram.paddingRight = 10;
+						
+						title.text = pTitle;
+						title.percentWidth = 100;
+						title.setStyle("styleName", "title");
+						title.toolTip = pName;
+						title.errorString = pTitle;
+						
+						name.text = pName;
+						name.percentWidth = 100;
+						name.setStyle("styleName", "desc");
+						name.toolTip = pName;
+						name.errorString = pTitle;
+						
+						if (pTime != curTime) {
+							var timeLabel:Label = new Label();
+							timeLabel.text = pTime;
+							timeLabel.percentWidth = 100;
+							timeLabel.setStyle("styleName", "title");
+							if (curTime.length > 0) {
+								timeLabel.setStyle("paddingTop", "45");
+							}
+							timeLabel.setStyle("paddingBottom", "15");
+							curTime = pTime;
+							vGroupContent.addElement(timeLabel);
+						}
+						
+						details.text = pTime + " (" + roomTitle + " " + pRoom + ")";
+						details.percentWidth = 100;
+						details.setStyle("styleName", "desc");
+						details.toolTip = pName;
+						details.errorString = pTitle;
+						
+						vGroupProgram.addElement(name);
+						vGroupProgram.addElement(title);
+						vGroupProgram.addElement(details);
+						
+						records[count].addElement(vGroupProgram);
+						
+						//vGroupInfo.percentWidth = 100;
+						//vGroupProgram.height = 120;
+						vGroupInfo.paddingTop = 10;
+						vGroupInfo.paddingBottom = 10;
+						vGroupInfo.paddingLeft = 10;
+						vGroupInfo.paddingRight = 10;
+						
+						vGroupInfo.addElement(call);
+						vGroupInfo.addElement(web);
+						records[count].addElement(vGroupInfo);
+						
+						groupProgramCard.addElement(records[count]);
+						vGroupContent.addElement(groupProgramCard);
+						vGroupContent.addElement(programLine);
+						
+						name.addEventListener(MouseEvent.CLICK, onClickProgram);
+						title.addEventListener(MouseEvent.CLICK, onClickProgram);
+						details.addEventListener(MouseEvent.CLICK, onClickProgram);
+						//groupProgramCard.addEventListener(MouseEvent.CLICK, onClickProgram);
+						/*author.addEventListener(MouseEvent.CLICK, onClickProgram);
+						subjectGrade.addEventListener(MouseEvent.CLICK, onClickProgram);
+						stats.addEventListener(MouseEvent.CLICK, onClickProgram);*/
+						
+						bottomSpacer.height = 15;
+						bottomSpacer.percentWidth = 100;
+						
+						vGroupContent.addElement(bottomSpacer);
+						count++;
+					}
+
+				}
+				loadingRes.visible = false;
+				loadingRes.includeInLayout = false;
+			}
+			
+			protected function showSearchResults(event:Event):void
+			{
+				var fileContents:XML = new XML(event.currentTarget.data);
+				var count:int = 0;
+				var records:Array = [];
+				var urls:Array = [];
+				
+				var pName:String = "";
+				var pTitle:String = "";
+				var pDate:String = "";
+				var pTime:String = "";
+				var pRoom:String = "";
+				var pAbstract:String = "";
+				
+				var pNameLower:String = "";
+				var pTitleLower:String = "";
+				
+				var pSearchString:String = String(data[1]);
+				
+				for (var item:String in fileContents.item) {
+					
+					pName = fileContents.item.@name[item];
+					pTitle = fileContents.item.@title[item];
+					pDate = fileContents.item.@date[item];
+					pTime = fileContents.item.@time[item];
+					pRoom = fileContents.item.@room[item];
+					pAbstract = fileContents.item.@abstract[item];
+					
+					pNameLower = pName.toLowerCase();
+					pTitleLower = pTitle.toLowerCase();
+					
+					if (pNameLower.indexOf(data[1].toLowerCase()) > -1 || pTitleLower.indexOf(data[1].toLowerCase()) > -1) {
+						var groupProgramCard:Group = new Group();
+						var programRect:Rect = new Rect();
+						var programStrokeColour:SolidColorStroke = new SolidColorStroke();
+						var programFill:SolidColor = new SolidColor();
+						var programLineColour:SolidColorStroke = new SolidColorStroke();
+						var programLine:Line = new Line();
+						var vGroupProgram:VGroup = new VGroup();
+						var vGroupInfo:VGroup = new VGroup();
+						var bottomSpacer:Spacer = new Spacer();
+						
+						var name:Label = new Label();
+						var title:Label = new Label();
+						var details:Label = new Label();
+						var call:Label = new Label();
+						var web:Label = new Label();
+						
+						groupProgramCard.percentWidth = 100;
+						//groupBookCard.percentHeight = 10;
+						
+						programRect.percentWidth = 100;
+						programRect.percentHeight = 100;							
+						
+						programStrokeColour.color = 0xFFFFFF;
+						programStrokeColour.weight = 2;
+						programRect.stroke = programStrokeColour;
+						
+						programFill.color = 0xFFFFFF;
+						programRect.fill = programFill;
+						
+						groupProgramCard.addElement(programRect);
+						
+						programLine.percentWidth = 100;
+						programLineColour.color = 0xB0B0B0;
+						programLineColour.weight = 2;
+						programLine.stroke = programLineColour;
+						
+						records[count] = new HGroup();
+						// http://stackoverflow.com/a/1046147
+						records[count].percentWidth = 100;
+						records[count].verticalAlign = "middle";
+						
+						vGroupProgram.percentWidth = 100;
+						//vGroupProgram.height = 120;
+						vGroupProgram.paddingTop = 10;
+						vGroupProgram.paddingBottom = 10;
+						vGroupProgram.paddingLeft = 10;
+						vGroupProgram.paddingRight = 10;
+						
+						title.text = pTitle;
+						title.percentWidth = 100;
+						title.setStyle("styleName", "title");
+						title.toolTip = pName;
+						title.errorString = pTitle;
+						
+						name.text = pName;
+						name.percentWidth = 100;
+						name.setStyle("styleName", "desc");
+						name.toolTip = pName;
+						name.errorString = pTitle;
+						
+						details.text = monthTitle + " " + pDate + ", " + pTime + " (" + roomTitle + " " + pRoom + ")";
+						details.percentWidth = 100;
+						details.setStyle("styleName", "desc");
+						details.toolTip = pName;
+						details.errorString = pTitle;
+						
+						vGroupProgram.addElement(name);
+						vGroupProgram.addElement(title);
+						vGroupProgram.addElement(details);
+						
+						records[count].addElement(vGroupProgram);
+						
+						//vGroupInfo.percentWidth = 100;
+						//vGroupProgram.height = 120;
+						vGroupInfo.paddingTop = 10;
+						vGroupInfo.paddingBottom = 10;
+						vGroupInfo.paddingLeft = 10;
+						vGroupInfo.paddingRight = 10;
+						
+						vGroupInfo.addElement(call);
+						vGroupInfo.addElement(web);
+						records[count].addElement(vGroupInfo);
+						
+						groupProgramCard.addElement(records[count]);
+						vGroupContent.addElement(groupProgramCard);
+						vGroupContent.addElement(programLine);
+						
+						name.addEventListener(MouseEvent.CLICK, onClickProgram);
+						title.addEventListener(MouseEvent.CLICK, onClickProgram);
+						details.addEventListener(MouseEvent.CLICK, onClickProgram);
+						//groupProgramCard.addEventListener(MouseEvent.CLICK, onClickProgram);
+						/*author.addEventListener(MouseEvent.CLICK, onClickProgram);
+						subjectGrade.addEventListener(MouseEvent.CLICK, onClickProgram);
+						stats.addEventListener(MouseEvent.CLICK, onClickProgram);*/
+						
+						bottomSpacer.height = 10;
+						bottomSpacer.percentWidth = 100;
+						
+						vGroupContent.addElement(bottomSpacer);
+						count++;
+					}	
+				}
+				loadingRes.visible = false;
+				loadingRes.includeInLayout = false;
+				
+				if (count == 0) {
+					labelNoResults.visible = true;
+					labelNoResults.includeInLayout = true;
+				}
+			}
+			
+			// http://stackoverflow.com/a/14762479/2363223
+			protected function onClickProgram(e:MouseEvent):void {
+				if (e.target is Label) {
+					var info:Label = e.target as Label;
+					navigator.pushView(PresDetails, [info.toolTip, info.errorString]);
+				}
+			}
+		]]>
+	</fx:Script>
+	
+	<fx:Declarations>
+		<s:SlideViewTransition id="slideTransition" duration="300" direction="up" transitionControlsWithContent="false"/>
+	</fx:Declarations>
+	
+	<s:VGroup id="vGroupMain" height="100%" width="100%" gap="0"> 
+		<s:Group id="groupActionBarTitle" width="100%">
+			<s:Rect width="100%" height="100%">
+				<s:fill><s:SolidColor id="backgroundActionBarTitle" color="#801332"/></s:fill>
+			</s:Rect>
+			<s:HGroup id="hGroupActionBarContents" width="100%" verticalAlign="middle" height="100%" paddingLeft="10" paddingRight="10">
+				<s:Label id="labelActionBarTitle" maxDisplayedLines="1" text="&#8592; May" color="#FFFFFF" styleName="title" paddingTop="20" paddingBottom="20" click="navigator.popView();"/>
+				<s:Spacer width="100%"/>
+				<s:BusyIndicator id="loadingRes" symbolColor="#FFFFFF"/>
+			</s:HGroup>
+		</s:Group>
+		
+		<!-- http://help.adobe.com/en_US/flex/using/WS422719A4-7849-4921-AF39-57FF567B483B.html#WS063B0491-B7AB-4b00-A39F-E44310BCB0E0 -->
+		<!--<s:SkinnableContainer id="backgroundContainer" height="100%" width="100%" skinClass="skins.BackPic">-->
+		
+		<s:VGroup id="vGroupBackground" width="100%" height="100%" gap="0">
+			
+			<s:Group id="groupBackground" width="100%" height="100%">
+				
+				<s:Rect width="100%" height="100%">
+					<!--<s:stroke>
+					<s:SolidColorStroke id="colourActionBarTitleBorder" color="#000000" weight="2" />
+					</s:stroke>-->
+					<s:fill><s:SolidColor id="backgroundBackground" color="#E8E8E8"/></s:fill>
+				</s:Rect>
+				
+				<s:Scroller id="mainScroller" width="100%" height="100%">
+					
+					<s:VGroup id="vGroupContent" height="100%" width="100%" gap="0" paddingRight="20" paddingLeft="20" paddingTop="20" paddingBottom="20">
+						<s:Label id="labelNoResults" width="100%" textAlign="center" paddingTop="30" text="No results found." visible="false" includeInLayout="false"/>
+					</s:VGroup>
+					
+				</s:Scroller>
+				
+			</s:Group>
+			
+		</s:VGroup>
+				
+	</s:VGroup>
+	
+	<s:VGroup width="100%" height="100%">
+		<s:Group id="groupNetworkError" width="100%" visible="false" includeInLayout="false" depth="2">
+			<!-- http://flexponential.com/2009/11/23/adding-a-background-color-to-a-spark-group/ --> 
+			<s:Rect width="100%" height="100%">
+				<s:fill><s:SolidColor color="#B80000" alpha="0.9"/></s:fill>
+			</s:Rect>
+			<s:VGroup id="vGroupNoConnection" paddingBottom="10" paddingLeft="10" paddingRight="10" width="100%">
+				<s:Spacer id="spacerNetworkTop" width="10" height="10"/>
+				<s:HGroup id="hGroupConnectionProblem" width="100%">
+					<s:Label id="labelNetworkError" height="100%" width="100%" color="#FFFFFF"
+							 text="No network connection." verticalAlign="middle" textAlign="center"/>
+				</s:HGroup>
+				<s:Spacer id="spacerNetworkBottom" width="10" height="10"/>
+			</s:VGroup>
+		</s:Group>
+	</s:VGroup>
+	
+</s:View>

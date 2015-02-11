@@ -1,0 +1,471 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:View xmlns:fx="http://ns.adobe.com/mxml/2009" creationComplete="view1_creationCompleteHandler(event)"
+		xmlns:s="library://ns.adobe.com/flex/spark" title="Home" actionBarVisible="false">
+	<fx:Script>
+		<![CDATA[
+			import mx.events.FlexEvent;
+			import mx.events.PropertyChangeEvent;
+			
+			import mx.graphics.SolidColorStroke;
+			import spark.primitives.Line;
+			
+			import air.net.URLMonitor;
+			
+			import spark.managers.PersistenceManager;
+			
+			//import com.mesmotronic.ane.AndroidFullScreen;
+			
+			[Embed(source="../res/program.png")]
+			[Bindable]
+			public var imgProgram:Class;
+			
+			[Embed(source="../res/restaurant.png")]
+			[Bindable]
+			public var imgRestaurant:Class;
+			
+			[Embed(source="../res/hotel.png")]
+			[Bindable]
+			public var imgHotel:Class;
+			
+			[Embed(source="../res/conversation.png")]
+			[Bindable]
+			public var imgConversation:Class;
+			
+			[Embed(source="../res/people.png")]
+			[Bindable]
+			public var imgPeople:Class;
+			
+			[Embed(source="../res/configure.png")]
+			[Bindable]
+			public var imgConfigure:Class;
+			
+			[Embed(source="../res/about.png")]
+			[Bindable]
+			public var imgAbout:Class;
+			
+			[Bindable]
+			private var titleFontSize:int;
+			
+			[Bindable]
+			private var descFontSize:int;
+			
+			private var p:PersistenceManager = new PersistenceManager();
+			
+			private var urlMonitor:URLMonitor;
+			
+			private var refreshTimer:Timer;
+			
+			private var url:String = "http://bryanabsmith.com/iaacs/app/commentList.php";
+			
+			protected function view1_creationCompleteHandler(event:FlexEvent):void {
+				
+				trace(Capabilities.os.substring(0,2));
+				if (Capabilities.os.substring(0,2) == "iP") { // iPhone, iPad and iPod Touch padding at the top
+					hGroupActionBarContents.paddingTop = 40;
+					hGroupLoading.paddingTop = 40;
+					vGroupNoConnection.paddingTop = 40;
+				} else {
+					hGroupActionBarContents.paddingTop = 0;
+					hGroupLoading.paddingTop = 10;
+				}
+				
+				
+				// http://stackoverflow.com/questions/4390725/flex-4-scroller/4425091#4425091
+				mainScroller.viewport.addEventListener(PropertyChangeEvent.PROPERTY_CHANGE, scroller_changeHandler)
+				
+				var colourScheme:String = p.getProperty("colourScheme") as String;
+				var colourSchemeLabel:String = p.getProperty("colourSchemeLabel") as String;
+				
+				// http://forum.starling-framework.org/topic/detect-device-type-phone-tablet
+				var w:Number = Capabilities.screenResolutionX;
+				var h:Number = Capabilities.screenResolutionY;
+				var dpi:Number = Capabilities.screenDPI;
+				
+				var screenInches:Number = Math.round(Math.sqrt(Math.pow(w/dpi,2)+Math.pow(h/dpi,2)) * 100) / 100;
+				
+				/*if (screenInches > 7.5) {
+					labelActionBarTitle.setStyle("paddingTop", "35");
+					labelActionBarTitle.setStyle("paddingBottom", "35");
+				}*/
+				
+				var selectedCountryName:String = p.getProperty("countryName") as String;
+				var selectedCountryIndex:int = p.getProperty("countryIndex") as int;
+				/*var selectedRefreshName:String = p.getProperty("refreshName") as String;
+				var refreshTime:int = 0;*/
+				var name:String = p.getProperty("name") as String;
+				var institution:String = p.getProperty("institution") as String;
+				var configured:String = p.getProperty("configured") as String;
+				
+				if (selectedCountryName == null) {
+					selectedCountryName = "Afghanistan";
+				} else {
+					selectedCountryName = p.getProperty("countryName").toString()
+				}
+				
+				if (selectedCountryIndex == 0) {
+					selectedCountryIndex = 0;
+				} else {
+					selectedCountryIndex = int(p.getProperty("countryIndex"));
+				}
+				
+				/*if (selectedRefreshName == null || selectedRefreshName == "None") {
+				refreshTime = 0;
+				} else {
+				refreshTime = p.getProperty("refreshName") as int;
+				refreshTimer = new Timer(refreshTime*1000);
+				refreshTimer.addEventListener(TimerEvent.TIMER, showCommentsTimed);
+				refreshTimer.start();
+				}*/
+				
+				if (name == null) {
+					name = "";
+				} else {
+					name = p.getProperty("name").toString();
+				}
+				
+				if (institution == null) {
+					institution = "";
+				} else {
+					institution = p.getProperty("institution").toString();
+				}
+				
+				
+				var languageURL:URLRequest;
+				var selectedLanguage:String = p.getProperty("language") as String;
+				if (selectedLanguage == "fr") {
+					languageURL = new URLRequest("../res/translations/fr.xml");
+				} else {
+					languageURL = new URLRequest("../res/translations/en.xml");
+				}
+				
+				var licenceLoader:URLLoader = new URLLoader();
+				licenceLoader.addEventListener(Event.COMPLETE, displayText);
+				
+				function displayText(event:Event):void {
+					var fileContents:XML = new XML(event.currentTarget.data);
+					for (var item:String in fileContents.messages) {
+						labelActionBarTitle.text = "\u2190 " + fileContents.messages.@title[item];
+						labelLoadingMessages.text = fileContents.messages.@loading[item];
+						labelActionBarRefresh.text = fileContents.messages.@refresh[item];
+						labelNotConfigured.text = fileContents.messages.@notConfigured[item];
+						labelConfigure.text = fileContents.messages.@configure[item];
+						textComment.prompt = fileContents.messages.@message[item];
+					}
+				}
+				
+				licenceLoader.load(languageURL);
+				
+				
+				if (configured == "true") {
+					vGroupContent.removeAllElements();
+					
+					var urlRequest:URLRequest = new URLRequest("http://www.bryanabsmith.com");
+					urlMonitor = new URLMonitor(urlRequest);
+					urlMonitor.addEventListener(StatusEvent.STATUS, onStatusEvent);
+					urlMonitor.start();
+				}
+			}
+			
+			
+			private function onStatusEvent(event:StatusEvent):void {
+				var evt:StatusEvent = event;
+				if (evt.code == "Service.available") {
+					/*groupNetworkError.visible = false;
+					groupNetworkError.includeInLayout = false;*/
+					mainScroller.enabled = true;
+					
+					var myLoader:URLLoader = new URLLoader();
+					myLoader.addEventListener(Event.COMPLETE, showComments);
+					myLoader.load(new URLRequest(url));
+				} else {
+					/*groupNetworkError.visible = true;
+					groupNetworkError.includeInLayout = true;*/
+					mainScroller.enabled = false;
+				}
+			}
+			
+			protected function showComments(event:Event):void {
+				//mainScroller.viewport.verticalScrollPosition = -100;
+				
+				var fileContents:XML = new XML(event.currentTarget.data);
+				
+				var cDate:String = "";
+				var cName:String = "";
+				var cInstitution:String = "";
+				var cCountry:String = "";
+				var cComment:String = "";
+				
+				var count:int = 0;
+				var records:Array = [];
+				
+				for (var item:String in fileContents.comment) {
+					cDate = fileContents.comment.@date[item];
+					cName = fileContents.comment.@name[item];
+					cInstitution = fileContents.comment.@institution[item];
+					cCountry = fileContents.comment.@country[item];
+					cComment = fileContents.comment.@comment[item];
+					
+					var groupConversationCard:Group = new Group();
+					var conversationRect:Rect = new Rect();
+					var conversationStrokeColour:SolidColorStroke = new SolidColorStroke();
+					var conversationFill:SolidColor = new SolidColor();
+					var conversationLineColour:SolidColorStroke = new SolidColorStroke();
+					var conversationLine:Line = new Line();
+					var vGroupConversation:VGroup = new VGroup();
+					var vGroupInfo:VGroup = new VGroup();
+					var bottomSpacer:Spacer = new Spacer();
+					
+					var date:Label = new Label();
+					var comment:Label = new Label();
+					var nameInstitution:Label = new Label();
+					
+					groupConversationCard.percentWidth = 100;
+					//groupBookCard.percentHeight = 10;
+					
+					conversationRect.percentWidth = 100;
+					conversationRect.percentHeight = 100;
+					
+					conversationStrokeColour.color = 0xFFFFFF;
+					conversationStrokeColour.weight = 2;
+					conversationRect.stroke = conversationStrokeColour;
+					
+					conversationFill.color = 0xFFFFFF;
+					conversationRect.fill = conversationFill;
+					
+					groupConversationCard.addElement(conversationRect);
+					
+					conversationLine.percentWidth = 100;
+					conversationLineColour.color = 0xB0B0B0;
+					conversationLineColour.weight = 2;
+					conversationLine.stroke = conversationLineColour;
+					
+					records[count] = new HGroup();
+					// http://stackoverflow.com/a/1046147
+					records[count].percentWidth = 100;
+					records[count].verticalAlign = "middle";
+					
+					vGroupConversation.percentWidth = 100;
+					//vGroupConversation.height = 120;
+					vGroupConversation.paddingTop = 10;
+					vGroupConversation.paddingBottom = 10;
+					vGroupConversation.paddingLeft = 10;
+					vGroupConversation.paddingRight = 10;
+					
+					date.text = cDate;
+					date.percentWidth = 100;
+					date.setStyle("styleName", "desc");
+					date.setStyle("color", "#888888");
+					
+					comment.text = cComment;
+					comment.percentWidth = 100;
+					comment.setStyle("styleName", "title");
+					
+					nameInstitution.text = "\u2014 " + cName + ", " + cInstitution + " (" + cCountry + ")";
+					nameInstitution.percentWidth = 100;
+					nameInstitution.setStyle("paddingLeft", "20")
+					nameInstitution.setStyle("styleName", "desc");
+					nameInstitution.setStyle("color", "#888888");
+					
+					vGroupConversation.addElement(date);
+					vGroupConversation.addElement(comment);
+					vGroupConversation.addElement(nameInstitution);
+					
+					records[count].addElement(vGroupConversation);
+					
+					groupConversationCard.addElement(records[count]);
+					vGroupContent.addElement(groupConversationCard);
+					vGroupContent.addElement(conversationLine);
+					
+					bottomSpacer.height = 10;
+					bottomSpacer.percentWidth = 100;
+					vGroupContent.addElement(bottomSpacer);
+					
+					count++;
+				}
+				hGroupActionBarContents.visible = true;
+				hGroupActionBarContents.includeInLayout = true;
+				hGroupLoading.visible = false;
+				hGroupLoading.includeInLayout = false;
+				//labelSendConversation.visible = true;
+				//labelSendConversation.includeInLayout = true;
+				textComment.text = "";
+				//labelSendConversation.setFocus();
+				//mainScroller.viewport.addEventListener(PropertyChangeEvent.PROPERTY_CHANGE, scroller_changeHandler)
+			}
+			
+			// http://www.riagora.com/2011/05/pull-down-to-refresh/
+			protected function scroller_changeHandler(event:PropertyChangeEvent):void {
+				var position:int = mainScroller.viewport.verticalScrollPosition; // http://www.solid-thinking.com/how-to-change-the-scroll-value-of-a-scroller-component-in-flexflash-builder-with-actionscript/
+				if (position < -75) {
+					mainScroller.viewport.removeEventListener(PropertyChangeEvent.PROPERTY_CHANGE, scroller_changeHandler);
+					/*loadingComments.visible = true;
+					loadingComments.includeInLayout = true;*/
+					vGroupContent.removeAllElements();
+					hGroupActionBarContents.visible = false;
+					hGroupActionBarContents.includeInLayout = false;
+					hGroupLoading.visible = true;
+					hGroupLoading.includeInLayout = true;
+					
+					var urlRequest:URLRequest = new URLRequest("http://www.bryanabsmith.com");
+					urlMonitor = new URLMonitor(urlRequest);
+					urlMonitor.addEventListener(StatusEvent.STATUS, onStatusEvent);
+					urlMonitor.start();
+				}
+			}
+			
+			protected function labelSend_clickHandler(event:MouseEvent):void {
+				try {
+					//labelSendConversation.visible = false;
+					//labelSendConversation.includeInLayout = false;
+					
+					var variables:URLVariables = new URLVariables();
+					
+					var name:String = p.getProperty("name") as String;
+					var institution:String = p.getProperty("institution") as String;
+					var selectedCountryName:String = p.getProperty("countryName") as String;
+					
+					variables.name = name;
+					variables.institution = institution;
+					variables.country = selectedCountryName;
+					variables.comment = textComment.text;
+					
+					// the request object containing URL and parameters
+					var request:URLRequest = new URLRequest("http://www.bryanabsmith.com/iaacs/app/commentCommit.php");
+					request.method = URLRequestMethod.POST;
+					request.data = variables;
+					
+					// now send a request to the PHP script with those parameters
+					var urlLoader:URLLoader = new URLLoader();
+					urlLoader.addEventListener(Event.COMPLETE, responseReceived);
+					urlLoader.load(request);
+					
+					/*showUploadedLabel.play();
+					var hider:Timer = new Timer(20000);
+					hider.start();
+					labelUploadedLesson.includeInLayout = true;
+					hideUploadedLabel.play();*/
+					
+					function responseReceived(event:Event):void {
+						//vGroupContent.removeChildren(0, 2147483647);
+						vGroupContent.removeAllElements();
+						var urlRequest:URLRequest = new URLRequest("http://www.bryanabsmith.com");
+						urlMonitor = new URLMonitor(urlRequest);
+						urlMonitor.addEventListener(StatusEvent.STATUS, onStatusEvent);
+						urlMonitor.start();
+						urlLoader.removeEventListener(Event.COMPLETE, responseReceived);
+					}
+				} catch (e:Error) {
+					trace("Error!");
+				}
+			}
+			
+			protected function labelActionBarRefresh_clickHandler(event:MouseEvent):void
+			{
+				vGroupContent.removeAllElements();
+				hGroupActionBarContents.visible = false;
+				hGroupActionBarContents.includeInLayout = false;
+				hGroupLoading.visible = true;
+				hGroupLoading.includeInLayout = true;
+				
+				var urlRequest:URLRequest = new URLRequest("http://www.bryanabsmith.com");
+				urlMonitor = new URLMonitor(urlRequest);
+				urlMonitor.addEventListener(StatusEvent.STATUS, onStatusEvent);
+				urlMonitor.start();
+			}
+			
+		]]>
+	</fx:Script>
+	
+	<fx:Declarations>
+		<s:SlideViewTransition id="slideTransition" duration="300" direction="up" transitionControlsWithContent="false"/>
+	</fx:Declarations>
+	
+	<s:VGroup id="vGroupMain" height="100%" width="100%" gap="0">
+		<s:Group id="groupActionBarTitle" width="100%">
+			<s:Rect width="100%" height="100%">
+				<s:fill><s:SolidColor id="backgroundActionBarTitle" color="#801332"/></s:fill>
+			</s:Rect>
+			
+			<s:HGroup id="hGroupLoading" width="100%" verticalAlign="middle" height="100%" paddingLeft="10" paddingRight="10" horizontalAlign="center">
+				<!-- <s:BusyIndicator id="loadingMessagesIndicator" symbolColor="#FFFFFF" height="100%"/> -->
+				<s:Label id="labelLoadingMessages" text="Loading Messages..."  color="#FFFFFF" styleName="title" paddingTop="15" paddingBottom="15" paddingRight="10" paddingLeft="10" verticalAlign="middle" maxDisplayedLines="1" height="100%"/>
+			</s:HGroup>
+			
+			<s:HGroup id="hGroupActionBarContents" width="100%" verticalAlign="middle" height="100%" paddingLeft="10" paddingRight="10" visible="false" includeInLayout="false">
+				<s:Label id="labelActionBarTitle" height="100%" maxDisplayedLines="1" text="&#8592; Back" color="#FFFFFF" styleName="title" paddingTop="20" paddingBottom="20" paddingRight="10" verticalAlign="middle" click="navigator.popToFirstView();"/>
+				<!--<s:TextInput id="textComment" width="100%" autoCapitalize="sentence" contentBackgroundColor="0x57000f" color="#FFFFFF" paddingBottom="20" returnKeyLabel="done" enter="labelSend_clickHandler(null)"/>-->
+				<!-- <s:Label id="labelSendConversation" height="100%" text="Send" color="#FFFFFF" styleName="title" paddingTop="20" paddingBottom="30" paddingLeft="10" verticalAlign="middle" click="labelSend_clickHandler(event);" visible="false" includeInLayout="false"/> -->
+				<s:Spacer width="100%"/>
+				<s:Label id="labelActionBarRefresh" height="100%" maxDisplayedLines="1" text="Refresh" color="#FFFFFF" styleName="title" paddingTop="20" paddingBottom="20" paddingRight="10" verticalAlign="middle" click="labelActionBarRefresh_clickHandler(event)"/>
+			</s:HGroup>
+		</s:Group>
+		
+		<s:Group id="groupActionBarMessage" width="100%" alpha="0.85">
+			<s:Rect width="100%" height="100%">
+				<s:fill><s:SolidColor id="backgroundActionBarMessage" color="#000000"/></s:fill>
+			</s:Rect>
+			<s:HGroup id="hGroupMessageText" width="100%" paddingLeft="15" paddingRight="15" paddingBottom="15" paddingTop="15">
+				<s:TextInput id="textComment" width="100%" autoCapitalize="sentence" contentBackgroundColor="0x505050" color="#FFFFFF" paddingBottom="20" returnKeyLabel="done" enter="labelSend_clickHandler(null)" prompt="Message"/>
+			</s:HGroup>
+		</s:Group>
+		
+		<!--<s:Group id="groupActionBarMessage" width="100%">
+			<s:Rect width="100%" height="100%">
+				<s:fill><s:SolidColor id="backgroundActionBarMessage" color="#C9C9CE"/></s:fill>
+			</s:Rect>
+			<s:HGroup id="hGroupMessageText" width="100%" paddingLeft="15" paddingRight="15" paddingBottom="15" paddingTop="15">
+				<s:TextInput id="textComment" width="100%" autoCapitalize="sentence" contentBackgroundColor="0xFFFFFF" paddingBottom="20" returnKeyLabel="done" enter="labelSend_clickHandler(null)" prompt="Message"/>
+			</s:HGroup>
+		</s:Group>-->
+		
+		<!-- http://help.adobe.com/en_US/flex/using/WS422719A4-7849-4921-AF39-57FF567B483B.html#WS063B0491-B7AB-4b00-A39F-E44310BCB0E0 -->
+		<!--<s:SkinnableContainer id="backgroundContainer" height="100%" width="100%" skinClass="skins.BackPic">-->
+		
+		<s:VGroup id="vGroupBackground" width="100%" height="100%" gap="0">
+			
+			<s:Group id="groupBackground" width="100%" height="100%">
+				
+				<s:Rect width="100%" height="100%">
+					<!--<s:stroke>
+					<s:SolidColorStroke id="colourActionBarTitleBorder" color="#000000" weight="2" />
+					</s:stroke>-->
+					<s:fill><s:SolidColor id="backgroundBackground" color="#E8E8E8"/></s:fill>
+				</s:Rect>
+				
+				<s:Scroller id="mainScroller" width="100%" height="100%" liveScrolling="false">
+					
+					<s:VGroup id="vGroupContent" height="100%" width="100%" gap="0" paddingRight="20" paddingLeft="20" paddingTop="20" paddingBottom="20">
+						
+						<s:Spacer height="100%"/>
+						<s:Label id="labelNotConfigured" text="Please set your personal information first before contributing to the conversation." width="100%" textAlign="center" styleName="title" paddingBottom="30"/>
+						<s:Label id="labelConfigure" text="Configure" styleName="title" color="0x0000EE" width="100%" textAlign="center" click="navigator.pushView(Configure);"/>
+						<s:Spacer height="100%"/>
+						
+					</s:VGroup>
+					
+				</s:Scroller>
+				
+			</s:Group>
+			
+		</s:VGroup>
+		<!--</s:SkinnableContainer>-->
+	</s:VGroup>
+	
+	<s:VGroup width="100%" height="100%">
+		<s:Group id="groupNetworkError" width="100%" visible="false" includeInLayout="false" depth="2">
+			<!-- http://flexponential.com/2009/11/23/adding-a-background-color-to-a-spark-group/ --> 
+			<s:Rect width="100%" height="100%">
+				<s:fill><s:SolidColor color="#B80000" alpha="0.9"/></s:fill>
+			</s:Rect>
+			<s:VGroup id="vGroupNoConnection" paddingBottom="10" paddingLeft="10" paddingRight="10" width="100%">
+				<s:Spacer id="spacerNetworkTop" width="10" height="10"/>
+				<s:HGroup id="hGroupConnectionProblem" width="100%">
+					<s:Label id="labelNetworkError" height="100%" width="100%" color="#FFFFFF"
+							 text="No network connection." verticalAlign="middle" textAlign="center"/>
+				</s:HGroup>
+				<s:Spacer id="spacerNetworkBottom" width="10" height="10"/>
+			</s:VGroup>
+		</s:Group>
+	</s:VGroup>
+	
+</s:View>

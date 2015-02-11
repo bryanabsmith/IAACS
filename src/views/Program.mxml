@@ -1,0 +1,621 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:View xmlns:fx="http://ns.adobe.com/mxml/2009" creationComplete="view1_creationCompleteHandler(event)"
+		xmlns:s="library://ns.adobe.com/flex/spark" title="Home" actionBarVisible="false">
+	<fx:Script>
+		<![CDATA[
+			import mx.events.FlexEvent;
+			
+			import spark.managers.PersistenceManager;
+			
+			import air.net.URLMonitor;
+			
+			private var db:File;
+			private var sqlConn:SQLConnection;
+			private var sqlStmt:SQLStatement;
+			
+			//import com.mesmotronic.ane.AndroidFullScreen;
+			
+			[Embed(source="../res/saved.png")]
+			[Bindable]
+			public var imgSavedProgram:Class;
+			
+			[Bindable]
+			private var titleFontSize:int;
+			
+			[Bindable]
+			private var descFontSize:int;
+			
+			private var urlMonitor:URLMonitor;
+			
+			private var url:String = "http://bryanabsmith.com/iaacs/app/program_list.xml";
+			
+			private var p:PersistenceManager = new PersistenceManager();
+			
+			private var noProgram:String = "";
+			
+			private var deleteLabel:String = "Delete";
+			
+			protected function view1_creationCompleteHandler(event:FlexEvent):void
+			{
+				if (Capabilities.os.substring(0,2) == "iP") { // iPhone, iPad and iPod Touch padding at the top
+					hGroupActionBarContents.paddingTop = 40;
+					labelDeleteSaved.setStyle("paddingTop", 50);
+					labelViewAbstractTitle.setStyle("paddingTop", 50);
+					vGroupNoConnection.paddingTop = 40;
+				} else {
+					hGroupActionBarContents.paddingTop = 0;
+				}
+				
+				var colourScheme:String = p.getProperty("colourScheme") as String;
+				var colourSchemeLabel:String = p.getProperty("colourSchemeLabel") as String;
+				
+				sqlConn = new SQLConnection();
+				db = File.applicationStorageDirectory.resolvePath("iaacsSaved.db");
+				sqlStmt = new SQLStatement();
+
+				var languageURL:URLRequest;
+				var selectedLanguage:String = p.getProperty("language") as String;
+				if (selectedLanguage == "fr") {
+					languageURL = new URLRequest("../res/translations/fr.xml");
+				} else {
+					languageURL = new URLRequest("../res/translations/en.xml");
+				}
+				
+				var licenceLoader:URLLoader = new URLLoader();
+				licenceLoader.addEventListener(Event.COMPLETE, displayText);
+				licenceLoader.load(languageURL);
+				
+				function displayText(event:Event):void {
+					var fileContents:XML = new XML(event.currentTarget.data);
+					for (var item:String in fileContents.program) {
+						labelActionBarTitle.text = "\u2190 " + fileContents.program.@title[item];
+						noProgram = fileContents.program.@unavailable[item];
+						labelSearchProgram.text = fileContents.program.@searchTitle[item];
+						labelProgramDates.text = fileContents.program.@datesTitle[item];
+						labelProgram26Title.text = fileContents.program.@dayOneTitle[item];
+						labelProgram26Desc.text = fileContents.program.@dayOneDate[item];
+						labelProgram27Title.text = fileContents.program.@dayTwoTitle[item];
+						labelProgram27Desc.text = fileContents.program.@dayTwoDate[item];
+						labelProgram28Title.text = fileContents.program.@dayThreeTitle[item];
+						labelProgram28Desc.text = fileContents.program.@dayThreeDate[item];
+						labelProgram29Title.text = fileContents.program.@dayFourTitle[item];
+						labelProgram29Desc.text = fileContents.program.@dayFourDate[item];
+						
+						labelViewAbstractTitle.text = "\u2190 " + fileContents.program.@sessionDetails[item];
+						detailsName.text = fileContents.program.@nameTitle[item];
+						detailsTitle.text = fileContents.program.@titleTitle[item];
+						detailsDetails.text = fileContents.program.@detailsTitle[item];
+						detailsAbstract.text = fileContents.program.@abstractTitle[item];
+						
+						labelDeleteSaved.text = "\u2190 " + fileContents.program.@deleteSession[item];
+						deleteName.text = fileContents.program.@nameTitle[item];
+						deleteTitle.text = fileContents.program.@titleTitle[item];
+						deleteDetails.text = fileContents.program.@detailsTitle[item];
+						deleteButton.text = fileContents.program.@deleteTitle[item];
+						
+						deleteLabel = fileContents.program.@deleteTitle[item];
+					}
+				}
+				
+				if (db.exists) {
+					sqlConn.open(db);
+					sqlStmt.sqlConnection = sqlConn;
+					try {
+						displaySavedList();
+					} catch (e:Error) {
+						trace("DB doesn't exist.");
+					}
+				}
+				// http://forum.starling-framework.org/topic/detect-device-type-phone-tablet
+				var w:Number = Capabilities.screenResolutionX;
+				var h:Number = Capabilities.screenResolutionY;
+				var dpi:Number = Capabilities.screenDPI;
+				
+				var screenInches:Number = Math.round(Math.sqrt(Math.pow(w/dpi,2)+Math.pow(h/dpi,2)) * 100) / 100;
+				
+				/*if (screenInches > 7.5) {
+					labelActionBarTitle.setStyle("paddingTop", "35");
+					labelActionBarTitle.setStyle("paddingBottom", "35");
+				}*/
+				
+				var urlRequest:URLRequest = new URLRequest("http://www.bryanabsmith.com");
+				urlMonitor = new URLMonitor(urlRequest);
+				urlMonitor.addEventListener(StatusEvent.STATUS, onStatusEvent);
+				urlMonitor.start();
+			}
+			
+			private function onStatusEvent(event:StatusEvent):void
+			{
+				var evt:StatusEvent = event;
+				if (evt.code == "Service.available") {
+					var myLoader:URLLoader = new URLLoader();
+					myLoader.addEventListener(Event.COMPLETE, checkProgramList);
+					myLoader.load(new URLRequest(url));
+				} else {
+					/*groupNetworkError.visible = true;
+					groupNetworkError.includeInLayout = true;*/
+					mainScroller.enabled = false;
+				}
+			}
+			
+			protected function checkProgramList(event:Event):void
+			{
+				var fileContents:XML = new XML(event.currentTarget.data);
+				
+				if (fileContents.availability.@isIt == "fals") {
+					
+					var topSpacer:Spacer = new Spacer();
+					topSpacer.percentHeight = 100;
+					
+					var labelNoProgram:Label = new Label();
+					labelNoProgram.text = noProgram;
+					labelNoProgram.percentWidth = 100;
+					labelNoProgram.setStyle("styleName", "title");
+					labelNoProgram.setStyle("textAlign", "center");
+					vGroupContent.removeAllElements();
+					
+					var bottomSpacer:Spacer = new Spacer();
+					bottomSpacer.percentHeight = 100;
+					
+					vGroupContent.addElement(topSpacer);
+					vGroupContent.addElement(labelNoProgram);
+					vGroupContent.addElement(bottomSpacer);
+					vGroupContent.visible = true;
+				} else {
+					vGroupContent.visible = true;
+				}
+				
+			}
+			
+			protected function displaySavedList():void {
+				
+				var records:Array = [];
+				var buttonBar:Array = [];
+				var urls:Array = [];
+				
+				var sessionID:String;
+				var sessionName:String;
+				var sessionTitle:String;
+				var sessionDetails:String;
+				var sessionAbstract:String;
+				
+				var count:int = 0;
+				sqlStmt.text = "SELECT * FROM iaacsSaved";
+				sqlStmt.execute();
+				
+				vGroupSavedContent.removeAllElements();
+				
+				var result:Array = sqlStmt.getResult().data;
+				if (result != null) {
+					for (var x:int = result.length - 1; x >= 0; x--) {
+						count += 1;
+						
+						var groupSessionCard:Group = new Group();
+						var sessionRect:Rect = new Rect();
+						var sessionStrokeColour:SolidColorStroke = new SolidColorStroke();
+						var sessionFill:SolidColor = new SolidColor();
+						var sessionLineColour:SolidColorStroke = new SolidColorStroke();
+						var sessionLine:Line = new Line();
+						var vGroupSession:VGroup = new VGroup();
+						var name:Label = new Label();
+						var title:Label = new Label();
+						var details:Label = new Label();
+						var bottomSpacer:Spacer = new Spacer();
+						
+						sessionID = result[x].id;
+						sessionName = result[x].name;
+						sessionTitle = result[x].title;
+						sessionDetails = result[x].details;
+						sessionAbstract = result[x].abstract;
+						
+						groupSessionCard.percentWidth = 100;
+						//groupBookCard.percentHeight = 10;
+						
+						sessionRect.percentWidth = 100;
+						sessionRect.percentHeight = 100;							
+						
+						sessionStrokeColour.color = 0xFFFFFF;
+						sessionStrokeColour.weight = 2;
+						sessionRect.stroke = sessionStrokeColour;
+						
+						sessionFill.color = 0xFFFFFF;
+						sessionRect.fill = sessionFill;
+						
+						groupSessionCard.addElement(sessionRect);
+						
+						sessionLine.percentWidth = 100;
+						sessionLineColour.color = 0xB0B0B0;
+						sessionLineColour.weight = 2;
+						sessionLine.stroke = sessionLineColour;
+						
+						records[count] = new HGroup();
+						// http://stackoverflow.com/a/1046147
+						records[count].percentWidth = 100;
+						records[count].verticalAlign = "middle";
+						
+						var delLabel:Label = new Label();
+						trace("Del Label: " + deleteLabel);
+						delLabel.text = "\u20E0";
+						delLabel.percentHeight = 100;
+						delLabel.percentWidth = 100;
+						delLabel.setStyle("verticalAlign", "middle");
+						delLabel.setStyle("textAlign", "center");
+						
+						delLabel.setStyle("color", "0x000000");
+						delLabel.setStyle("backgroundColor", "0xE0E0E0"); 
+						delLabel.setStyle("paddingRight", "10");
+						delLabel.setStyle("paddingLeft", "10");
+						delLabel.setStyle("paddingTop", "10");
+						delLabel.setStyle("paddingBottom", "10");
+						delLabel.toolTip = sessionID;
+						
+						delLabel.addEventListener(MouseEvent.CLICK, deleteSavedSession);
+						
+						vGroupSession.percentWidth = 100;
+						//vGroupSession.height = 120;
+						vGroupSession.paddingTop = 10;
+						vGroupSession.paddingBottom = 10;
+						vGroupSession.paddingLeft = 10;
+						vGroupSession.paddingRight = 10;
+						
+						name.text = sessionName;
+						name.percentWidth = 100;
+						name.styleName = "desc";
+						//name.setStyle("styleName", titleFontSize);
+						name.toolTip = sessionID;
+						name.addEventListener(MouseEvent.CLICK, viewSavedDetails);
+						
+						title.text = sessionTitle;
+						title.percentWidth = 100;
+						title.styleName = "title";
+						title.toolTip = sessionID;
+						title.addEventListener(MouseEvent.CLICK, viewSavedDetails);
+						
+						details.text = sessionDetails;
+						details.percentWidth = 100;
+						details.styleName = "desc";
+						details.toolTip = sessionID;
+						details.addEventListener(MouseEvent.CLICK, viewSavedDetails);
+						
+						vGroupSession.addElement(name);
+						vGroupSession.addElement(title);
+						vGroupSession.addElement(details);
+						
+						//records[count].addElement(delLabel);
+						records[count].addElement(vGroupSession);
+						
+						groupSessionCard.addElement(records[count]);
+						vGroupSavedContent.addElement(groupSessionCard);
+						
+						buttonBar[count] = new HGroup();
+						// http://stackoverflow.com/a/1046147
+						buttonBar[count].percentWidth = 100;
+						buttonBar[count].gap = 0;
+						buttonBar[count].verticalAlign = "middle";
+						
+						buttonBar[count].addElement(delLabel);
+						vGroupSavedContent.addElement(buttonBar[count]);
+						vGroupSavedContent.addElement(sessionLine);
+						
+						/*name.addEventListener(MouseEvent.CLICK, onClickSession);
+						author.addEventListener(MouseEvent.CLICK, onClickSession);
+						subjectGrade.addEventListener(MouseEvent.CLICK, onClickSession);*/
+						
+						bottomSpacer.height = 10;
+						bottomSpacer.percentWidth = 100;
+						
+						vGroupSavedContent.addElement(bottomSpacer);
+						
+						labelProgramSaved.visible = true;
+						labelProgramSaved.includeInLayout = true;
+						spacerProgramSaved.visible = true;
+						spacerProgramSaved.includeInLayout = true;
+					}
+					sqlConn.close();
+				} else {
+					labelProgramSaved.visible = false;
+					labelProgramSaved.includeInLayout = false;
+					spacerProgramSaved.visible = false;
+					spacerProgramSaved.includeInLayout = false;
+				}
+			}
+			
+			// http://stackoverflow.com/a/14762479/2363223
+			protected function deleteSavedSession(e:MouseEvent):void {
+				if (e.target is Label) {
+					var delRec:Label = e.target as Label;
+					groupDeleteSaved.visible = true;
+					groupDeleteSaved.includeInLayout = true;
+					deleteName.toolTip = delRec.toolTip;
+					
+					sqlConn = new SQLConnection();
+					db = File.applicationStorageDirectory.resolvePath("iaacsSaved.db");
+					sqlStmt = new SQLStatement();
+					
+					sqlConn.open(db);
+					sqlStmt.sqlConnection = sqlConn;
+					sqlStmt.text = "SELECT * FROM iaacsSaved WHERE id='" + int(deleteName.toolTip) + "'";
+					sqlStmt.execute();
+					
+					var result:Array = sqlStmt.getResult().data;
+					deleteName.text = result[0].name;
+					deleteTitle.text = result[0].title;
+					deleteDetails.text = result[0].details;
+				}
+			}
+			
+			protected function deleteButton_clickHandler(event:MouseEvent):void
+			{
+				sqlConn = new SQLConnection();
+				db = File.applicationStorageDirectory.resolvePath("iaacsSaved.db");
+				sqlStmt = new SQLStatement();
+				
+				sqlConn.open(db);
+				sqlStmt.sqlConnection = sqlConn;				
+				sqlStmt.text = "DELETE FROM iaacsSaved WHERE id='" + int(deleteName.toolTip) + "'";
+				sqlStmt.execute();
+				
+				groupDeleteSaved.visible = false;
+				groupDeleteSaved.includeInLayout = false;
+				
+				displaySavedList();
+			}
+			
+			// http://stackoverflow.com/a/14762479/2363223
+			protected function viewSavedDetails(e:MouseEvent):void {
+				if (e.target is Label) {
+					var detailsRec:Label = e.target as Label;
+					groupViewAbstract.visible = true;
+					groupViewAbstract.includeInLayout = true;
+					
+					sqlConn = new SQLConnection();
+					db = File.applicationStorageDirectory.resolvePath("iaacsSaved.db");
+					sqlStmt = new SQLStatement();
+					
+					sqlConn.open(db);
+					sqlStmt.sqlConnection = sqlConn;
+					sqlStmt.text = "SELECT * FROM iaacsSaved WHERE id='" + int(detailsRec.toolTip) + "'";
+					sqlStmt.execute();
+					
+					var result:Array = sqlStmt.getResult().data;
+					detailsName.text = result[0].name;
+					detailsTitle.text = result[0].title;
+					detailsDetails.text = result[0].details;
+					detailsAbstract.text = result[0].abstract;
+				}
+			}
+			
+		]]>
+	</fx:Script>
+	
+	<fx:Declarations>
+		<s:SlideViewTransition id="slideTransition" duration="300" direction="up" transitionControlsWithContent="false"/>
+	</fx:Declarations>
+	
+	<s:VGroup id="vGroupMain" height="100%" width="100%" gap="0">
+		<s:Group id="groupActionBarTitle" width="100%">
+			<s:Rect width="100%" height="100%">
+				<s:fill><s:SolidColor id="backgroundActionBarTitle" color="#801332"/></s:fill>
+			</s:Rect>
+			<s:HGroup id="hGroupActionBarContents" width="100%" verticalAlign="middle" height="100%" paddingLeft="10" paddingRight="10">
+				<s:Label id="labelActionBarTitle" maxDisplayedLines="1" text="&#8592; Program" color="#FFFFFF" styleName="title" paddingTop="20" paddingBottom="20" click="navigator.popToFirstView();"/>
+				<s:Spacer width="100%"/>
+			</s:HGroup>
+		</s:Group>
+		
+		<!-- http://help.adobe.com/en_US/flex/using/WS422719A4-7849-4921-AF39-57FF567B483B.html#WS063B0491-B7AB-4b00-A39F-E44310BCB0E0 -->
+		<!--<s:SkinnableContainer id="backgroundContainer" height="100%" width="100%" skinClass="skins.BackPic">-->
+		
+		<s:VGroup id="vGroupBackground" width="100%" height="100%" gap="0">
+			
+			<s:Group id="groupBackground" width="100%" height="100%">
+				
+				<s:Rect width="100%" height="100%">
+					<!--<s:stroke>
+					<s:SolidColorStroke id="colourActionBarTitleBorder" color="#000000" weight="2" />
+					</s:stroke>-->
+					<s:fill><s:SolidColor id="backgroundBackground" color="#E8E8E8"/></s:fill>
+				</s:Rect>
+				
+				<s:Scroller id="mainScroller" width="100%" height="100%">
+					
+					<s:VGroup id="vGroupContent" visible="false" height="100%" width="100%" gap="0" paddingRight="20" paddingLeft="20" paddingTop="20" paddingBottom="20">
+						
+						<s:Label id="labelSearchProgram" text="Search" styleName="title" width="100%"/>
+						
+						<s:Spacer height="20"/>
+						
+						<s:HGroup width="100%" paddingRight="10" paddingLeft="10" paddingTop="10" paddingBottom="10" verticalAlign="middle">
+							<!--<s:Image id="imageSearch" height="{textSearchProgram.height}" source="res/search.png" smooth="true" smoothingQuality="high"/>-->
+							<s:TextInput id="textSearchProgram" width="100%" contentBackgroundColor="#C8C8C8" returnKeyLabel="done" enter="navigator.pushView(ProgramList, ['0', textSearchProgram.text]);"/>
+						</s:HGroup>
+						
+						<s:Spacer height="40"/>
+						
+						<s:Label id="labelProgramDates" text="Dates" styleName="title" width="100%"/>
+						
+						<s:Spacer height="20"/>
+						
+						<s:HGroup width="100%">
+							<s:VGroup width="100%" gap="0">
+								<s:Group id="groupCardProgram26" width="100%" click="navigator.pushView(ProgramList, ['26', '']);">
+									<s:Rect width="100%" height="100%">
+										<!--<s:stroke>
+										<s:SolidColorStroke id="colourActionBarTitleBorder" color="#000000" weight="2" />
+										</s:stroke>-->
+										<s:fill><s:SolidColor id="backgroundCardProgram26" color="#FFFFFF"/></s:fill>
+									</s:Rect>
+									
+									<s:HGroup width="100%" height="100%" paddingRight="10" paddingLeft="10" paddingTop="10" paddingBottom="10" verticalAlign="middle">
+										<s:VGroup width="100%" height="100%">
+											<s:Label id="labelProgram26Title" text="Day One" styleName="title" width="100%" textAlign="center"/>
+											<s:Label id="labelProgram26Desc" text="May 26th" styleName="desc" width="100%" textAlign="center"/>
+										</s:VGroup>
+									</s:HGroup>
+								</s:Group>
+								<s:Line width="100%">
+									<s:stroke>
+										<s:SolidColorStroke color="0xB0B0B0" weight="2"/>
+									</s:stroke>
+								</s:Line>
+							</s:VGroup>
+							
+							<s:Spacer width="10%"/>
+							
+							<s:VGroup width="100%" gap="0">
+								<s:Group id="groupCardProgram27" width="100%" click="navigator.pushView(ProgramList, ['27', '']);">
+									<s:Rect width="100%" height="100%">
+										<!--<s:stroke>
+										<s:SolidColorStroke id="colourActionBarTitleBorder" color="#000000" weight="2" />
+										</s:stroke>-->
+										<s:fill><s:SolidColor id="backgroundCardProgram27" color="#FFFFFF"/></s:fill>
+									</s:Rect>
+									
+									<s:HGroup width="100%" height="100%" paddingRight="10" paddingLeft="10" paddingTop="10" paddingBottom="10" verticalAlign="middle">
+										<s:VGroup width="100%" height="100%">
+											<s:Label id="labelProgram27Title" text="Day Two" styleName="title" width="100%" textAlign="center"/>
+											<s:Label id="labelProgram27Desc" text="May 27th" styleName="desc" width="100%" textAlign="center"/>
+										</s:VGroup>
+									</s:HGroup>
+								</s:Group>
+								<s:Line width="100%">
+									<s:stroke>
+										<s:SolidColorStroke color="0xB0B0B0" weight="2"/>
+									</s:stroke>
+								</s:Line>
+							</s:VGroup>
+						</s:HGroup>
+						
+						<s:Spacer height="15"/>
+						
+						<s:HGroup width="100%">
+							<s:VGroup width="100%" gap="0">
+								<s:Group id="groupCardProgram28" width="100%" click="navigator.pushView(ProgramList, ['28', '']);">
+									<s:Rect width="100%" height="100%">
+										<!--<s:stroke>
+										<s:SolidColorStroke id="colourActionBarTitleBorder" color="#000000" weight="2" />
+										</s:stroke>-->
+										<s:fill><s:SolidColor id="backgroundCardProgram28" color="#FFFFFF"/></s:fill>
+									</s:Rect>
+									
+									<s:HGroup width="100%" height="100%" paddingRight="10" paddingLeft="10" paddingTop="10" paddingBottom="10" verticalAlign="middle">
+										<s:VGroup width="100%" height="100%">
+											<s:Label id="labelProgram28Title" text="Day Three" styleName="title" width="100%" textAlign="center"/>
+											<s:Label id="labelProgram28Desc" text="May 28th" styleName="desc" width="100%" textAlign="center"/>
+										</s:VGroup>
+									</s:HGroup>
+								</s:Group>
+								<s:Line width="100%">
+									<s:stroke>
+										<s:SolidColorStroke color="0xB0B0B0" weight="2"/>
+									</s:stroke>
+								</s:Line>
+							</s:VGroup>
+							
+							<s:Spacer width="10%"/>
+							
+							<s:VGroup width="100%" gap="0">
+								<s:Group id="groupCardProgram29" width="100%" click="navigator.pushView(ProgramList, ['29', '']);">
+									<s:Rect width="100%" height="100%">
+										<!--<s:stroke>
+										<s:SolidColorStroke id="colourActionBarTitleBorder" color="#000000" weight="2" />
+										</s:stroke>-->
+										<s:fill><s:SolidColor id="backgroundCardProgram29" color="#FFFFFF"/></s:fill>
+									</s:Rect>
+									
+									<s:HGroup width="100%" height="100%" paddingRight="10" paddingLeft="10" paddingTop="10" paddingBottom="10" verticalAlign="middle">
+										<s:VGroup width="100%" height="100%">
+											<s:Label id="labelProgram29Title" text="Day Four" styleName="title" width="100%" textAlign="center"/>
+											<s:Label id="labelProgram29Desc" text="May 29th" styleName="desc" width="100%" textAlign="center"/>
+										</s:VGroup>
+									</s:HGroup>
+								</s:Group>
+								<s:Line width="100%">
+									<s:stroke>
+										<s:SolidColorStroke color="0xB0B0B0" weight="2"/>
+									</s:stroke>
+								</s:Line>
+							</s:VGroup>
+						</s:HGroup>
+						
+						<s:Spacer height="40"/>
+						
+						<s:Label id="labelProgramSaved" text="Saved" styleName="title" width="100%" visible="false" includeInLayout="false"/>
+						<s:Spacer id="spacerProgramSaved" height="20"/>
+						<s:VGroup id="vGroupSavedContent" height="100%" width="100%" gap="0"></s:VGroup>
+						
+					</s:VGroup>
+					
+				</s:Scroller>
+				
+			</s:Group>
+			
+		</s:VGroup>
+		<!--</s:SkinnableContainer>-->		
+	</s:VGroup>
+	
+	<s:VGroup width="100%" height="100%">
+		<s:Group id="groupDeleteSaved" width="100%" height="100%" visible="false" includeInLayout="false" depth="2">
+			<!-- http://flexponential.com/2009/11/23/adding-a-background-color-to-a-spark-group/ --> 
+			<s:Rect width="100%" height="100%">
+				<s:fill><s:SolidColor color="#000000" alpha="0.85"/></s:fill>
+			</s:Rect>
+			<s:VGroup width="100%" height="100%">
+				<s:Label id="labelDeleteSaved" width="100%" paddingRight="20" paddingLeft="20" styleName="title" text="&#8592; Delete saved session?" color="#E8E8E8" paddingBottom="40" paddingTop="60" click="groupDeleteSaved.visible = false; groupDeleteSaved.includeInLayout = false;"/>
+				<s:Scroller id="deleteSavedScroller" width="100%" height="100%">
+					<s:VGroup paddingBottom="20" paddingLeft="20" paddingRight="20" width="100%" height="100%">
+						<s:VGroup id="hGroupDeleteSavedProblem" width="100%" height="100%">
+							<s:Label id="deleteName" styleName="desc" width="100%" color="#FFFFFF" textAlign="center"/>
+							<s:Label id="deleteTitle" styleName="title" width="100%" color="#FFFFFF" textAlign="center"/>
+							<s:Label id="deleteDetails" styleName="desc" width="100%" color="#FFFFFF" textAlign="center"/>
+							<s:Spacer height="100%"/>
+							<s:Label id="deleteButton" styleName="title" width="100%" text="Delete" alpha="0.8" color="#FFFFFF" backgroundColor="#D80000" textAlign="center" paddingBottom="20" paddingLeft="20" paddingRight="20" paddingTop="20" click="deleteButton_clickHandler(event)"/>
+						</s:VGroup>
+						<s:Spacer id="spacerDeleteSavedBottom" width="10" height="10"/>
+					</s:VGroup>
+				</s:Scroller>
+			</s:VGroup>
+		</s:Group>
+	</s:VGroup>
+	
+	<s:VGroup width="100%" height="100%">
+		<s:Group id="groupViewAbstract" width="100%" height="100%" visible="false" includeInLayout="false" depth="2">
+			<!-- http://flexponential.com/2009/11/23/adding-a-background-color-to-a-spark-group/ --> 
+			<s:Rect width="100%" height="100%">
+				<s:fill><s:SolidColor color="#000000" alpha="0.85"/></s:fill>
+			</s:Rect>
+			<s:VGroup width="100%" height="100%">
+				<s:Label id="labelViewAbstractTitle" width="100%" paddingRight="20" paddingLeft="20" styleName="title" text="&#8592; Session Details" color="#E8E8E8" paddingBottom="40" paddingTop="60" click="groupViewAbstract.visible = false; groupViewAbstract.includeInLayout = false;"/>
+				<s:Scroller id="detailsSavedScroller" width="100%" height="100%">
+					<s:VGroup paddingBottom="20" paddingLeft="20" paddingRight="20" paddingTop="20" width="100%" height="100%">
+						<s:VGroup id="hGroupViewAbstract" width="100%" height="100%">
+							<s:Label id="detailsName" styleName="desc" width="100%" color="#FFFFFF" textAlign="center"/>
+							<s:Label id="detailsTitle" styleName="title" width="100%" color="#FFFFFF" textAlign="center"/>
+							<s:Label id="detailsDetails" styleName="desc" width="100%" color="#FFFFFF" textAlign="center"/>
+							<s:Label id="detailsAbstract" styleName="desc" width="100%" color="#FFFFFF" textAlign="justify" paddingTop="20"/>
+						</s:VGroup>
+						<s:Spacer id="spacerViewAbstractBottom" width="10" height="10"/>
+					</s:VGroup>
+				</s:Scroller>
+			</s:VGroup>
+		</s:Group>
+	</s:VGroup>
+	
+
+	<s:VGroup width="100%" height="100%">
+		<s:Group id="groupNetworkError" width="100%" visible="false" includeInLayout="false" depth="2">
+			<!-- http://flexponential.com/2009/11/23/adding-a-background-color-to-a-spark-group/ --> 
+			<s:Rect width="100%" height="100%">
+				<s:fill><s:SolidColor color="#B80000" alpha="0.9"/></s:fill>
+			</s:Rect>
+			<s:VGroup id="vGroupNoConnection" paddingBottom="10" paddingLeft="10" paddingRight="10" width="100%">
+				<s:Spacer id="spacerNetworkTop" width="10" height="10"/>
+				<s:HGroup id="hGroupConnectionProblem" width="100%">
+					<s:Label id="labelNetworkError" height="100%" width="100%" color="#FFFFFF"
+							 text="No network connection." verticalAlign="middle" textAlign="center"/>
+				</s:HGroup>
+				<s:Spacer id="spacerNetworkBottom" width="10" height="10"/>
+			</s:VGroup>
+		</s:Group>
+	</s:VGroup>
+</s:View>
