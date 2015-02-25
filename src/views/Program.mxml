@@ -19,6 +19,10 @@
 			[Bindable]
 			public var imgSavedProgram:Class;
 			
+			[Embed(source="../res/offline.png")]
+			[Bindable]
+			public var imgOffline:Class;
+			
 			[Bindable]
 			private var titleFontSize:int;
 			
@@ -35,6 +39,8 @@
 			
 			private var deleteLabel:String = "Delete";
 			
+			private var offLine:Boolean = false;
+			
 			protected function view1_creationCompleteHandler(event:FlexEvent):void
 			{
 				if (Capabilities.os.substring(0,2) == "iP") { // iPhone, iPad and iPod Touch padding at the top
@@ -44,6 +50,12 @@
 					vGroupNoConnection.paddingTop = 40;
 				} else {
 					hGroupActionBarContents.paddingTop = 0;
+				}
+				
+				var offLineFile:File = File.applicationStorageDirectory.resolvePath("program.xml");
+				if (offLineFile.exists) {
+					offLine = true;
+					imageOffline.visible = true;
 				}
 				
 				var colourScheme:String = p.getProperty("colourScheme") as String;
@@ -142,7 +154,7 @@
 			{
 				var fileContents:XML = new XML(event.currentTarget.data);
 				
-				if (fileContents.availability.@isIt == "fals") {
+				if (fileContents.availability.@isIt == "false") {
 					
 					var topSpacer:Spacer = new Spacer();
 					topSpacer.percentHeight = 100;
@@ -163,8 +175,28 @@
 					vGroupContent.visible = true;
 				} else {
 					vGroupContent.visible = true;
+					
+					if (offLine == true) {
+						showOffline();
+					}
 				}
 				
+			}
+			
+			private function showOffline():void {
+				trace(File.applicationStorageDirectory.resolvePath("program.xml").url);
+				var offlineRequest:URLRequest = new URLRequest(File.applicationStorageDirectory.resolvePath("program.xml").url);
+				
+				var offlineURL:URLLoader = new URLLoader();
+				offlineURL.addEventListener(Event.COMPLETE, displayText);
+				offlineURL.load(offlineRequest);
+				
+				function displayText(event:Event):void {
+					var fileContents:XML = new XML(event.currentTarget.data);
+					for (var item:String in fileContents.item) {
+						trace(fileContents.item.@name[item]);
+					}
+				}
 			}
 			
 			protected function displaySavedList():void {
@@ -400,6 +432,7 @@
 			<s:HGroup id="hGroupActionBarContents" width="100%" verticalAlign="middle" height="100%" paddingLeft="10" paddingRight="10">
 				<s:Label id="labelActionBarTitle" maxDisplayedLines="1" text="&#8592; Program" color="#FFFFFF" styleName="title" paddingTop="20" paddingBottom="20" click="navigator.popToFirstView();"/>
 				<s:Spacer width="100%"/>
+				<s:Image id="imageOffline" source="{imgOffline}" visible="false" smooth="true" smoothingQuality="high" height="{hGroupActionBarContents.height/1.5}" width="{hGroupActionBarContents.height/1.5}"/>
 			</s:HGroup>
 		</s:Group>
 		

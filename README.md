@@ -30,4 +30,6 @@ Licenced under the MIT Licence. See Licence.md for more details.
 Icons - licenced under the Creative Commons Attribution-ShareAlike 4.0 International Public
 License. The icons are courtesy of Google (see [here](https://github.com/google/material-design-icons)).
 
+Fonts - (c) 2014 Mozilla and Telefonica S.A. Licenced under the SIL Open Font Licence.
+
 Mapping library - courtesy of MapQuest (see [here](http://developer.mapquest.com/web/products/featured/as3-flex-flash-mobile)).

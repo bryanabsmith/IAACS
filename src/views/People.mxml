@@ -68,6 +68,7 @@
 			private var descFontSize:int;
 			
 			private var p:PersistenceManager = new PersistenceManager();
+			var selectedLanguage:String = new String();
 			
 			protected function view1_creationCompleteHandler(event:FlexEvent):void
 			{
@@ -95,7 +96,7 @@
 				}*/
 				
 				var languageURL:URLRequest;
-				var selectedLanguage:String = p.getProperty("language") as String;
+				selectedLanguage = p.getProperty("language") as String;
 				if (selectedLanguage == "fr") {
 					languageURL = new URLRequest("../res/translations/fr.xml");
 				} else {
@@ -124,9 +125,15 @@
 				groupViewKeynoteDetails.includeInLayout = true;
 				
 				detailsName.text = "Lesley LeGrange";
-				detailsPosition.text = "Distinguished Professor, Environmental Education and Curriculum Studies";
-				detailsTitle.text = "Currere's active force and the concept of Ubuntu";
-				detailsKeynoteDetails.text = "William Pinar avers that the internationalization of Curriculum Studies is about complicated conversations that occur across national boundaries. This paper opens up a conversation that draws on insights from North American scholars such as William Pinar, Ted Aoki, Jason Wallin and the African concept of ubuntu (humanness) in exploring the becoming of pedagogical lives in a post-humanist era. It is invokes the etymological root of curriculum, currere, which Pinar first introduced to the field more than 40 years ago and, which Wallin recently extends in his exploration of what he calls \"currere's active force\". The paper intends to conceptually weave together currere and ubuntu so as to open up ways of becoming that are more human without being humanist. It troubles approaches to curriculum underpinned by humanism that have been complicit in producing the environmental crisis, the global financial crisis, the holocaust, the Rwandan genocide, apartheid, and so on.";
+				if (selectedLanguage == "fr") {
+					detailsPosition.text = "Professeur émérite, Éducation environnementale et curriculaire";
+					detailsTitle.text = "Des forces actives de l’autobiographie pédagogique et du concept de l’Ubuntu (humanisme).";
+					detailsKeynoteDetails.text = "William Pinar avance que l’internationalisation des études curriculaires est portée par des conversations complexes nous transportant à travers les frontières nationales. Cet essai entame  une conversation partant des idées de chercheurs nord-américains tels William Pinar, Ted Aoki, Jason Wallin et du concept africain de ubuntu (humanisme) afin d’explorer le devenir des vies pédagogiques dans une ère post-humaniste. Cet essai  invoque les racines étymologiques du mot curriculum, soit «currere», introduit par Pinar il y a plus de quarante ans, et la«force active» de ce concept autobiographique, tel que proposé par Wallin. Comment pouvons-nous explorer les métissages entre currere et ubuntu en vue de retrouver une authenticité humaine sans devenir humaniste ? L’essai explore les aspects troublants d’un currriculum ancré dans l’humanisme qui est devenu complice des crises environnementales, économiques, de l’Holocauste, du génocide, de l’apartheid, et ainsi de suite.";
+				} else {
+					detailsPosition.text = "Distinguished Professor, Environmental Education and Curriculum Studies";
+					detailsTitle.text = "Currere's active force and the concept of Ubuntu";
+					detailsKeynoteDetails.text = "William Pinar avers that the internationalization of Curriculum Studies is about complicated conversations that occur across national boundaries. This paper opens up a conversation that draws on insights from North American scholars such as William Pinar, Ted Aoki, Jason Wallin and the African concept of ubuntu (humanness) in exploring the becoming of pedagogical lives in a post-humanist era. It is invokes the etymological root of curriculum, currere, which Pinar first introduced to the field more than 40 years ago and, which Wallin recently extends in his exploration of what he calls \"currere's active force\". The paper intends to conceptually weave together currere and ubuntu so as to open up ways of becoming that are more human without being humanist. It troubles approaches to curriculum underpinned by humanism that have been complicit in producing the environmental crisis, the global financial crisis, the holocaust, the Rwandan genocide, apartheid, and so on.";
+				}
 			}
 			
 			protected function groupCardDonald_clickHandler(event:MouseEvent):void
@@ -135,9 +142,15 @@
 				groupViewKeynoteDetails.includeInLayout = true;
 				
 				detailsName.text = "Dwayne Donald";
-				detailsPosition.text = "Associate Professor, Secondary Education";
-				detailsTitle.text = "Curriculum, Citizenship, and Sacred Ecology: A Call For \"Real People\"";
-				detailsKeynoteDetails.text = "With this talk, Donald will explore the intimate linkages between curriculum thought, citizenship, and notions of human being-ness. Specific attention will be given to the main mythologies that have guided formal schooling and curriculum thought since the Enlightenment juxtaposed with Indigenous understandings of what it means to be a ‘real person.’ Focus will be given to the curricular promotion of market-informed notions of citizenship that are unsustainable and continually overlook Indigenous wisdom insights on sacred ecology, holism, and ethical relationality. The point will be made that curriculum thought and notions of human being-ness need to begin with acknowledging and honouring the more-than-human entities that give us life.";
+				if (selectedLanguage == "fr") {
+					detailsPosition.text = "Professeur associé, Enseignement secondaire";
+					detailsTitle.text = "Curriculum, citoyenneté et écologie sacrée: à la recherche des «personnes authentiques»";
+					detailsKeynoteDetails.text = "Dans le cadre de cette présentation, Donald révèlera les liens intimes entre la pensée curriculaire, la citoyenneté, et les notions d’authencité de l’expérience humaine.  Une attention particulière sera portée sur les mythologies ayant forgé l’éducation formelle et la réflexion sur le curriculum depuis le sìècle des Lumières, en les contrastant à la compréhension autochtone des «vraies personnes». Cette notion économique de la citoyenneté ne cesse d’omettre la sagesse autochtone portant sur l’écologie sacrée, les approches holistiques, et l’éthique relationnelle.  La réflexion curriculaire et la quête d’authencitié humaine ne saurait se priver de reconnaître et honorer les entités para-humaines nous ayant donné vie.";
+				} else {
+					detailsPosition.text = "Associate Professor, Secondary Education";
+					detailsTitle.text = "Curriculum, Citizenship, and Sacred Ecology: A Call For \"Real People\"";
+					detailsKeynoteDetails.text = "With this talk, Donald will explore the intimate linkages between curriculum thought, citizenship, and notions of human being-ness. Specific attention will be given to the main mythologies that have guided formal schooling and curriculum thought since the Enlightenment juxtaposed with Indigenous understandings of what it means to be a ‘real person.’ Focus will be given to the curricular promotion of market-informed notions of citizenship that are unsustainable and continually overlook Indigenous wisdom insights on sacred ecology, holism, and ethical relationality. The point will be made that curriculum thought and notions of human being-ness need to begin with acknowledging and honouring the more-than-human entities that give us life.";
+				}
 			}
 			
 			protected function groupCardMacedo_clickHandler(event:MouseEvent):void
@@ -146,9 +159,15 @@
 				groupViewKeynoteDetails.includeInLayout = true;
 				
 				detailsName.text = "Elizabeth Macedo";
-				detailsPosition.text = "Professor, Department of Teaching and Learning, Curriculum";
-				detailsTitle.text = "Intellectual agency in the internationalization of curriculum studies";
-				detailsKeynoteDetails.text = "In this paper, I will conceive internationalization as a liminal experience of translatability that creates incommensurable temporalities reenacting \"national\" and \"academic\" experiences, both understood as communitarian experiences. Instead of asking how boundaries among countries and academic disciplines are overlapped by the internationalization [or by trans-disciplinary approaches], I will work with the idea that they --- and the national and academic identities associated to them --- are effects of power of how the curriculum field has been politically represented. In other words, I will accept that curriculum communities have no essential meanings and are produced by intellectual agency operating in the making of the curriculum field. I will rely on data collected by William Pinar's project \"Curriculum Studies: Intellectual Histories, Present Circumstances\".";
+				if (selectedLanguage == "fr") {
+					detailsPosition.text = "Professor, Department of Teaching and Learning, Curriculum";
+					detailsTitle.text = "Intellectual agency in the internationalization of curriculum studies";
+					detailsKeynoteDetails.text = "Dans cet essai, je présente l'internationalisation en tant qu'expérience liminake permettant de réenvisager les exprériences \"nationales\" et \"académiques\" d'un point de vue communautarisme.  Au lieu de   comment les frontières entre pays et disciplines académiques sont  abolies par l'internationalisation ou par des approches trandisciplinaires, j'indiquerai en quoi ces approches - et les identités nationales et académiques s'y associant - s'avèrent le reflet des rapports de pouvoir dans le champ des études curriculaires. En d'autres mots, j'accepterai le fait de la non-signifiance des communautés curriculaires et leur construction intellectuelle sous les agences opérant dans le champ des études curriculaires. Je m'appuierai pour cela sur les données recueillies par le projet de William Pinar “Curriculum Studies: Intellectual Histories, Present Circumstances”.";
+				} else {
+					detailsPosition.text = "Professor, Department of Teaching and Learning, Curriculum";
+					detailsTitle.text = "Intellectual agency in the internationalization of curriculum studies";
+					detailsKeynoteDetails.text = "In this paper, I will conceive internationalization as a liminal experience of translatability that creates incommensurable temporalities reenacting \"national\" and \"academic\" experiences, both understood as communitarian experiences. Instead of asking how boundaries among countries and academic disciplines are overlapped by the internationalization [or by trans-disciplinary approaches], I will work with the idea that they --- and the national and academic identities associated to them --- are effects of power of how the curriculum field has been politically represented. In other words, I will accept that curriculum communities have no essential meanings and are produced by intellectual agency operating in the making of the curriculum field. I will rely on data collected by William Pinar's project \"Curriculum Studies: Intellectual Histories, Present Circumstances\".";
+				}
 			}
 			
 			protected function groupCardPinar_clickHandler(event:MouseEvent):void
@@ -157,9 +176,15 @@
 				groupViewKeynoteDetails.includeInLayout = true;
 				
 				detailsName.text = "William Pinar";
-				detailsPosition.text = "Canada Research Chair, Professor, Curriculum Studies";
-				detailsTitle.text = "The Cosmopolitan Cause of Curriculum Studies";
-				detailsKeynoteDetails.text = "Globalization summarizes our present circumstances, the ruthless promotion of standardized assessment, technology, and through them curricular content. Reactions against globalization testify to the pervasiveness of its psychic and well as political penetration. In contrast to globalization, internationalization is a term I reserve for the cosmopolitan cause of curriculum studies, the articulation of difference through democratic dialogue among colleagues within and across national borders. Such dialogue requires clarification through questioning of and by colleagues located elsewhere, as concepts are understood first on their own terms, then recontextualized according to local circumstances. In this presentation I will document important instances of recontextualization through reference to exchanges over key contemporary concepts among curriculum scholars working in Brazil, Canada, China, India, Mexico, South Africa, and the United States.";
+				if (selectedLanguage == "fr") {
+					detailsPosition.text = "Canada Research Chair, Professor, Curriculum Studies";
+					detailsTitle.text = "Des racines cosmopolites des études curriculaires";
+					detailsKeynoteDetails.text = "La globalisation résume nos circonstances présentes, la mise en valeur de l’évaluation normalisée, la technologie, et le contenu curriculaire s’y rattachant. Les réactions contre la globalisation indiquent les effets pervers de sa psyché et de sa pénétration politique. Contrairement à la globalisation, l’internationalisation est un terme que je dédie aux racines cosmopolites des études curriculaires, soit l’articulation de la différence par le dialogue démocratique entre collèges au sein et au delà de frontières nationales.  Ce dialogue requiert des précisions à travers sa remise en question et ses représentations par les collègues d’ailleurs, qui reprennent ces concepts dans leurs propres termes et les réinventent en fonction des contextes locaux. Cette présentation documente les efforts de recontextualisation en cours à travers les échanges sur les concepts-clés des études curriculaires par des chercheurs agissant en Afrique du Sud, au Brésil, au Canada, en Chine, aux États-Unis, en Inde, et au Mexique.";
+				} else {
+					detailsPosition.text = "Canada Research Chair, Professor, Curriculum Studies";
+					detailsTitle.text = "The Cosmopolitan Cause of Curriculum Studies";
+					detailsKeynoteDetails.text = "Globalization summarizes our present circumstances, the ruthless promotion of standardized assessment, technology, and through them curricular content. Reactions against globalization testify to the pervasiveness of its psychic and well as political penetration. In contrast to globalization, internationalization is a term I reserve for the cosmopolitan cause of curriculum studies, the articulation of difference through democratic dialogue among colleagues within and across national borders. Such dialogue requires clarification through questioning of and by colleagues located elsewhere, as concepts are understood first on their own terms, then recontextualized according to local circumstances. In this presentation I will document important instances of recontextualization through reference to exchanges over key contemporary concepts among curriculum scholars working in Brazil, Canada, China, India, Mexico, South Africa, and the United States.";
+				}
 			}
 			
 			protected function groupCardRopo_clickHandler(event:MouseEvent):void
@@ -168,9 +193,16 @@
 				groupViewKeynoteDetails.includeInLayout = true;
 				
 				detailsName.text = "Eero Ropo";
-				detailsPosition.text = "Professor, Faculty of Education";
-				detailsTitle.text = "Curriculum for identity: Enhancing identity negotiations in school education";
-				detailsKeynoteDetails.text = "Curriculum is largely based on the political decisions of the type of know-how, and knowledge required by the life as a productive citizen in a future society. In educational practice, however, education is concerned with the individual growth of children and youngsters in the schools. I will discuss the concept of identity in relation to school education and curriculum. The main point is that taking individual, social and cultural identities as a basis for education requires changes in the current school curricula, pedagogical practices, conceptions of learning and assessment and evaluation of results. I will also describe some results from our research efforts in Finland to develop school education to enhance identity negotiations in school practice.";			}
+				if (selectedLanguage == "fr") {
+					detailsPosition.text = "Professor, Faculty of Education";
+					detailsTitle.text = "Vers un curriculum de l’identité : favoriser les négociations identitaires au sein du parcours scolaire";
+					detailsKeynoteDetails.text = "Le curriculum est largement axé sur les décisions politiques portant sur les savoirs-faire et connaissances requises afin d’être un citoyen productif dans la société future. Pourtant, la pratique éducationnelle se préoccupe du développement des enfants et jeunes dans les écoles. Je discuterai du concept de l’identité en lien avec l’éducation scolaire et le curriculum. Mon argument principal est que la prise en compte des identités individuelles, sociales et culturelles comme point d’ancrage de l’éducation requiert des changements au curriculum scolaire actuel, aux pratiques pédagogiques, aux concepts de l’apprentissage et de l’évaluation. Je décrirai également des résultats de notre étude réalisée en Finlande en vue de favoriser les négociations identitaires dans la pratique éducationnelle.";
+				} else {
+					detailsPosition.text = "Professor, Faculty of Education";
+					detailsTitle.text = "Curriculum for identity: Enhancing identity negotiations in school education";
+					detailsKeynoteDetails.text = "Curriculum is largely based on the political decisions of the type of know-how, and knowledge required by the life as a productive citizen in a future society. In educational practice, however, education is concerned with the individual growth of children and youngsters in the schools. I will discuss the concept of identity in relation to school education and curriculum. The main point is that taking individual, social and cultural identities as a basis for education requires changes in the current school curricula, pedagogical practices, conceptions of learning and assessment and evaluation of results. I will also describe some results from our research efforts in Finland to develop school education to enhance identity negotiations in school practice.";
+				}
+			}
 			
 			protected function groupCardWang_clickHandler(event:MouseEvent):void
 			{
@@ -178,9 +210,15 @@
 				groupViewKeynoteDetails.includeInLayout = true;
 			
 				detailsName.text = "Hongyu Wang";
-				detailsPosition.text = "Professor, Curriculum Studies";
-				detailsTitle.text = "Nonviolence as a Daily Practice of Education";
-				detailsKeynoteDetails.text = "This presentation evokes nonviolence—the calling of our time—as a curriculum vision to re-think our daily educational work. Cultivating the integration of body and mind and promoting compassionate relationships, nonviolence should lie in the heart of today’s education. The following, intertwined, aspects of nonviolence education will be discussed: the definition of nonviolence in education; curriculum and pedagogy of nonviolence; the simultaneity of working from within and working with others; nonviolent international and cross-cultural engagement with difference. Advocating education about, for, and through nonviolence in the worldliness of curriculum studies, this presentation invites individual and collective efforts to enact the principle of nonviolence in daily practice to open up impossible possibilities.";
+				if (selectedLanguage == "fr") {
+					detailsPosition.text = "Professor, Curriculum Studies";
+					detailsTitle.text = "La non-violence en tant que pratique quotidienne dans l’éducation";
+					detailsKeynoteDetails.text = "Cette présentation tend vers la non-violence —dans toute l’urgence de notre époque—en tant qu’angle curriculaire nous permettant de reconsidérer notre quotidien comme éducateurs. Cultivant l’intégration du corps et de l’esprit et la promotion des relations bienveillantes, la non-violence devrait être au coeur de l’éducation actuelle. Les aspects suivants de l’éducation non-violente, tous interreliés, seront discutés : la définition de la non-violence en éducation; la pédagogie et le curriculum de la non-violence; la simultanéité du travail intérieur et du travail collaboratif, l’engagement international et interculturel avec la différence dans une perspective non-violente. Par la promotion de l’éducation sur, vers, et par la non-violence dans le champ mondial des études curriculaires, cette présentation invite les efforts individuels et collectifs à vivre les principes de la non-violence dans nos pratiques quotidiennes, en vue d’ouvrir d’impossibles possibles.";
+				} else {
+					detailsPosition.text = "Professor, Curriculum Studies";
+					detailsTitle.text = "Nonviolence as a Daily Practice of Education";
+					detailsKeynoteDetails.text = "This presentation evokes nonviolence—the calling of our time—as a curriculum vision to re-think our daily educational work. Cultivating the integration of body and mind and promoting compassionate relationships, nonviolence should lie in the heart of today’s education. The following, intertwined, aspects of nonviolence education will be discussed: the definition of nonviolence in education; curriculum and pedagogy of nonviolence; the simultaneity of working from within and working with others; nonviolent international and cross-cultural engagement with difference. Advocating education about, for, and through nonviolence in the worldliness of curriculum studies, this presentation invites individual and collective efforts to enact the principle of nonviolence in daily practice to open up impossible possibilities.";
+				}
 			}
 			
 			protected function groupCardHua_clickHandler(event:MouseEvent):void
@@ -189,9 +227,15 @@
 				groupViewKeynoteDetails.includeInLayout = true;
 				
 				detailsName.text = "Zhang Hua";
-				detailsPosition.text = "Professor and Dean, Graduate School of Educational Studies";
-				detailsTitle.text = "Toward Curriculum Wisdom";
-				detailsKeynoteDetails.text = "What is the aim, content, and methodology of curriculum studies? From Franklin Bobbitt to Ralph Tyler, the aim of curriculum studies is to control the process of curriculum development. The content is to seek the \"laws\" and \"rules\" of curriculum making. The methodology is scientism and proceduralism. The orientation can be called knowledge-based curriculum studies. From 1970s on, in representative of the Reconceptualization, the orientation of curriculum studies has been changed from \"knowledge-basedness\" to \"wisdom-basedness\". Transforming knowledge into wisdom, integrating wisdom and morality, are two main themes of wisdom-based curriculum studies. The great Canadian curriculum scholar Ted Aoki made great contributions to curriculum wisdom. The wisdom traditions of China, especially Confucianism, Taoism, and Buddhism, are of potential to construct curriculum wisdom and meet the need of curriculum studies in a radically changeable society.";
+				if (selectedLanguage == "fr") {
+					detailsPosition.text = "Professor and Dean, Graduate School of Educational Studies";
+					detailsTitle.text = "Vers une sagesse curriculaire";
+					detailsKeynoteDetails.text = "Quelles sont les finalités, les contenus, et les méthodologies des études curriculaires ? De Franklin Bobbitt à Ralph Tyler, les objectifs du domaine ont été le contrôle du processus du développement curriculaire. Le contenu se doit de respecter les lois et règles de la création des curriculum. La méthodologie est scientiste et procédurale. L’orientation peut être nommée les études curriculaires axées sur le savoir. À compter des années 1970, en vue de reconceptualiser le champ, l’orientation a changé du savoir à la sagesse. Le passage du savoir à la sagesse, et de la sagesse à la moralité, sont deux thèmes dominants des études curriculaires axées sur la sagesse. La contribution du brillant chercheur canadien Ted Aoki reflète bien cette sagesse du curriculum. Les sagesses traditionnelles chinoises, notamment le Confuciusianisme, le Taoisme et le Bouddhisme, ont le potentiel de construire une sagesse curriculaire répondant aux besoins des études curriculaires dans une société radicalement transformable.";
+				} else {
+					detailsPosition.text = "Professor and Dean, Graduate School of Educational Studies";
+					detailsTitle.text = "Toward Curriculum Wisdom";
+					detailsKeynoteDetails.text = "What is the aim, content, and methodology of curriculum studies? From Franklin Bobbitt to Ralph Tyler, the aim of curriculum studies is to control the process of curriculum development. The content is to seek the \"laws\" and \"rules\" of curriculum making. The methodology is scientism and proceduralism. The orientation can be called knowledge-based curriculum studies. From 1970s on, in representative of the Reconceptualization, the orientation of curriculum studies has been changed from \"knowledge-basedness\" to \"wisdom-basedness\". Transforming knowledge into wisdom, integrating wisdom and morality, are two main themes of wisdom-based curriculum studies. The great Canadian curriculum scholar Ted Aoki made great contributions to curriculum wisdom. The wisdom traditions of China, especially Confucianism, Taoism, and Buddhism, are of potential to construct curriculum wisdom and meet the need of curriculum studies in a radically changeable society.";
+				}
 			}
 			
 			protected function groupCardMiller_clickHandler(event:MouseEvent):void
@@ -200,9 +244,15 @@
 				groupViewKeynoteDetails.includeInLayout = true;
 			
 				detailsName.text = "Janet Miller";
-				detailsPosition.text = "Professor, English & Education, Curriculum Studies";
-				detailsTitle.text = "Worldwide Curriculum Studies: Communities without Consensus";
-				detailsKeynoteDetails.text = "I grapple with questions of ethical engagement that frame my notion of worldwide curriculum studies as \"communities without consensus.\" In so doing, I gesture toward possible and yet always fluctuating, momentary confluences wherein participants might explore curriculum studies as those that address how profoundly affected by others' lives we are. Heterogeneities and rapid fluxes now characterize global flows of peoples, languages, technologies, commodities, cultures, and capital through and across constantly changing borders, discourses, and subjectivities. Given embodied effects and affects of these, how might the worldwide field of curriculum studies imagine its iterations in light of local populations loosened -- voluntarily or not -- from their geographically constrained communities, for example? How might a conception of \"communities without consensus\" connect curriculum studies around the globe in complex ways that directly address ethical questions that involve difference, unknowingness, and the profundity of our relationality.";
+				if (selectedLanguage == "fr") {
+					detailsPosition.text = "Professor, English & Education, Curriculum Studies";
+					detailsTitle.text = "Études curriculaires à l’échelle mondiale : communautés sans consensus";
+					detailsKeynoteDetails.text = "J'aborde les questions de l'engagement d'un point de vue éthique, afin d'encadrer les perspectives curriculaires mondiales en tant que \"communautés sans consensus\".  Je souhaite ainsi reconnaître la nature mouvante et éphémère d'expériences curriculaires où les participants reconnaissent l'influence profonde de nos relations avec les autres. Notre époque nous plonge au coeur d'un flot incessant de gens, langues, biens, cultures, technologies,  se caractérisant par leur vitesse, leur caractère hétérogène, et leur mouvance à travers les frontières, discours, et subjectivité. Notamment,  comment prendre en compte les effets et affects de ces communautés déracinées -volontairement ou non-  dans le champ mondial des études curriculaires ? En quoi la notion de \"communauté sans consensus\" pourrait-elle contribuer à reconnaître les questions éthiques liées aux spécificités locales, aux non-savoirs et à la profondeur relationnelle du champ global des études curriculaires?";
+				} else {
+					detailsPosition.text = "Professor, English & Education, Curriculum Studies";
+					detailsTitle.text = "Worldwide Curriculum Studies: Communities without Consensus";
+					detailsKeynoteDetails.text = "I grapple with questions of ethical engagement that frame my notion of worldwide curriculum studies as \"communities without consensus.\" In so doing, I gesture toward possible and yet always fluctuating, momentary confluences wherein participants might explore curriculum studies as those that address how profoundly affected by others' lives we are. Heterogeneities and rapid fluxes now characterize global flows of peoples, languages, technologies, commodities, cultures, and capital through and across constantly changing borders, discourses, and subjectivities. Given embodied effects and affects of these, how might the worldwide field of curriculum studies imagine its iterations in light of local populations loosened -- voluntarily or not -- from their geographically constrained communities, for example? How might a conception of \"communities without consensus\" connect curriculum studies around the globe in complex ways that directly address ethical questions that involve difference, unknowingness, and the profundity of our relationality.";
+				}
 			}
 			
 			protected function groupCardTarc_clickHandler(event:MouseEvent):void
@@ -211,10 +261,16 @@
 				groupViewKeynoteDetails.includeInLayout = true;
 				
 				detailsName.text = "Paul Tarc";
-				detailsPosition.text = "Assistant Professor, Faculty of Education";
-				detailsTitle.text = "Fostering cosmopolitan literacies in performative times";
-				detailsKeynoteDetails.text = "In the expanding internationalization of education movement, there is heightened attention to the qualities and desired outcomes of intercultural encounters, experiences and lessons. However, conceptions of (cultural) difference, of development and of the learner tend toward the simplistic, the measurable and the determinable under pressures of performativity. For example, 'intercultural competence' frames the leaner as a self-enclosed knowledge-seeking subject who progressively moves from the ethnocentric to the ethno-relative along a determinable spectrum, itself set apart from (ethnocentric) culture. Even more 'critical' models often hold to too-simple correspondences between knowledge, awareness and transformation. 'Cosmopolitan literacies' represents a kind of intervention into this discursive space, offering a more complex conception of the limits and possibilities of learning across difference, the core curricular aim of international education. This presentation will introduce and discuss the lens of cosmopolitan literacies as well as how it may find traction in performative times.";		}
-			
+				if (selectedLanguage == "fr") {
+					detailsPosition.text = "Assistant Professor, Faculty of Education";
+					detailsTitle.text = "Cultiver les littéracies cosmopolites à l’ère de la performance";
+					detailsKeynoteDetails.text = "Devant l’expansion du mouvement en faveur de l’internationalisation de la formation, une attention accrue est portée sur les qualités et résultats escomptés des rencontres interculturelles, de leurs expériences et leçons. Toutefois, cèdant sous les pressions de la performance, la modélisation de la différence (culturelle),  de son développement et de l’apprenant tend vers la simplification, la mesure et le pré-déterminé. Notamment, la «compétence interculturelle» isole l’apprenant en tant que sujet en soi recherchant la connaissance, se déplaçant sur le continuum de l’ethnocentrisme à l’ethno-relativisme, lui-même détaché de son cadre culturel (ethnocentrique). Même les modèles les plus critiques semblent s’accrocher à simplifier  les liens entre la connaissance, la sensibilité et la transformation. Les ‘littéracies cosmopolites’ présentent un autre regard dans cet espace discursif, présentant les limites et possibles des apprentissages au delà des différences, au coeur des objectifs de l’éducation internationale. Cette présentation examinera les tenants des littéracies cosmopolites et leurs ancrages dans cette ère de performance.";
+				} else {
+					detailsPosition.text = "Assistant Professor, Faculty of Education";
+					detailsTitle.text = "Fostering cosmopolitan literacies in performative times";
+					detailsKeynoteDetails.text = "In the expanding internationalization of education movement, there is heightened attention to the qualities and desired outcomes of intercultural encounters, experiences and lessons. However, conceptions of (cultural) difference, of development and of the learner tend toward the simplistic, the measurable and the determinable under pressures of performativity. For example, 'intercultural competence' frames the leaner as a self-enclosed knowledge-seeking subject who progressively moves from the ethnocentric to the ethno-relative along a determinable spectrum, itself set apart from (ethnocentric) culture. Even more 'critical' models often hold to too-simple correspondences between knowledge, awareness and transformation. 'Cosmopolitan literacies' represents a kind of intervention into this discursive space, offering a more complex conception of the limits and possibilities of learning across difference, the core curricular aim of international education. This presentation will introduce and discuss the lens of cosmopolitan literacies as well as how it may find traction in performative times.";
+				}
+			}
 		]]>
 	</fx:Script>
 	

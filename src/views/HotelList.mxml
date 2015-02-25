@@ -31,7 +31,7 @@
 			
 			private var p:PersistenceManager = new PersistenceManager();
 			
-			private var url:String = "http://bryanabsmith.com/iaacs/app/restaurant_list.xml";
+			private var url:String = "http://bryanabsmith.com/iaacs/app/hotel_list.xml";
 			
 			private var callTitle:String = "";
 			private var webTitle:String = "";
@@ -87,8 +87,10 @@
 				var selectedLanguage:String = p.getProperty("language") as String;
 				if (selectedLanguage == "fr") {
 					languageURL = new URLRequest("../res/translations/fr.xml");
+					labelResidenceDesc.text = "Votre numéro de réservation est (booking reference number): 6438\nLes gens peuvent réserver:\n	- par courriel: reserve@uOttawa.ca\n	- par téléphone local: 613-564-5400\n	- par téléphone sans frais: 1-888-564-4545 (service disponible 24 h)";
 				} else {
 					languageURL = new URLRequest("../res/translations/en.xml");
+					labelResidenceDesc.text = "Reservation Number (booking reference number): 6438\nBooking Information:\n - Email: reserve@uOttawa.ca\n - Phone Number: 613-564-5400\n - Toll-Free: 1 -888-564-4545 (service available 24 hours)";
 				}
 				
 				var licenceLoader:URLLoader = new URLLoader();
@@ -119,7 +121,7 @@
 					mainScroller.enabled = true;
 					
 					var myLoader:URLLoader = new URLLoader();
-					myLoader.addEventListener(Event.COMPLETE, showRestaurantList);
+					myLoader.addEventListener(Event.COMPLETE, showHotelList);
 					myLoader.load(new URLRequest(url));
 				} else {
 					groupNetworkError.visible = true;
@@ -128,7 +130,7 @@
 				}
 			}
 			
-			protected function showRestaurantList(event:Event):void
+			protected function showHotelList(event:Event):void
 			{
 				var fileContents:XML = new XML(event.currentTarget.data);
 				var count:int = 0;
@@ -318,6 +320,7 @@
 				<s:Label id="labelActionBarTitle" maxDisplayedLines="1" text="&#8592; Restaurants" color="#FFFFFF" styleName="title" paddingTop="20" paddingBottom="20" click="navigator.popToFirstView();"/>
 				<s:Spacer width="100%"/>
 				<s:BusyIndicator id="loadingRes" symbolColor="#FFFFFF"/>
+				<s:Label id="labelResidenceTitle" maxDisplayedLines="1" text="Residence" color="#FFFFFF" styleName="title" paddingTop="20" paddingBottom="20" click="groupViewResidence.visible = true; groupViewResidence.includeInLayout = true;"/>
 			</s:HGroup>
 		</s:Group>
 		
@@ -364,6 +367,37 @@
 							 text="No network connection." verticalAlign="middle" textAlign="center"/>
 				</s:HGroup>
 				<s:Spacer id="spacerNetworkBottom" width="10" height="10"/>
+			</s:VGroup>
+		</s:Group>
+	</s:VGroup>
+	
+	<s:VGroup width="100%" height="100%">
+		<s:Group id="groupViewResidence" width="100%" height="100%" visible="false" includeInLayout="false" depth="2">
+			<!-- http://flexponential.com/2009/11/23/adding-a-background-color-to-a-spark-group/ --> 
+			<s:Rect width="100%" height="100%">
+				<s:fill><s:SolidColor color="#000000" alpha="0.85"/></s:fill>
+			</s:Rect>
+			<s:VGroup width="100%" height="100%">
+				<s:HGroup id="hGroupResidenceTitle" width="100%" paddingRight="20" paddingLeft="20" paddingBottom="20" paddingTop="60">
+					<s:Label id="labelViewResidence" width="100%" styleName="title" text="&#8592; Back" color="#E8E8E8" click="groupViewResidence.visible = false; groupViewResidence.includeInLayout = false;"/>
+				</s:HGroup>
+				<s:Scroller id="residenceScroller" width="100%" height="100%">
+					<s:VGroup id="vGroupViewResidence" paddingBottom="20" paddingLeft="20" paddingRight="20" width="100%" height="100%">
+						
+						<s:Group id="groupCardResidence" width="100%">
+							<s:Rect width="100%" height="100%" bottomLeftRadiusX="10" bottomLeftRadiusY="10" bottomRightRadiusX="10" bottomRightRadiusY="10" topLeftRadiusX="10" topLeftRadiusY="10" topRightRadiusX="10" topRightRadiusY="10">
+								<!--<s:stroke>
+								<s:SolidColorStroke id="colourActionBarTitleBorder" color="#000000" weight="2" />
+								</s:stroke>-->
+								<s:fill><s:SolidColor id="backgroundCardResidence" color="#505050"/></s:fill>
+							</s:Rect>
+							<s:VGroup width="100%" height="100%" paddingLeft="20" paddingBottom="20" paddingRight="20" paddingTop="20">
+								<s:Label id="labelResidenceInfoTitle" text="Contact Information" styleName="title" color="#FFFFFF" width="100%"/>
+								<s:Label id="labelResidenceDesc" text="" color="#FFFFFF" styleName="desc" width="100%"/>
+							</s:VGroup>
+						</s:Group>
+					</s:VGroup>
+				</s:Scroller>
 			</s:VGroup>
 		</s:Group>
 	</s:VGroup>

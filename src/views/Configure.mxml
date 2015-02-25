@@ -9,9 +9,8 @@
 			import spark.components.SplitViewNavigator;
 			import spark.components.ViewNavigator;
 			import spark.managers.PersistenceManager;
-			
 			import spark.transitions.CrossFadeViewTransition;
-			
+
 			[Embed(source="../res/name.png")]
 			[Bindable]
 			public var imgName:Class;
@@ -69,6 +68,10 @@
 			private var selectedLanguage:String;
 			
 			private var fadeTrans:CrossFadeViewTransition = new CrossFadeViewTransition();
+			
+			private var programUrl:String = "http://bryanabsmith.com/iaacs/app/program_list.xml";
+			private var loader:URLLoader = new URLLoader();
+			private var stream:URLStream;
 			
 			protected function view1_creationCompleteHandler(event:FlexEvent):void
 			{
@@ -193,7 +196,6 @@
 					labelEnglish.setStyle("color", 0xFFFFFF);
 					backgroundBackgroundFrench.color = 0xFFFFFF;
 					labelFrench.setStyle("color", 0x801332);
-					
 				} else {
 					backgroundBackgroundEnglish.color = 0xFFFFFF;
 					labelEnglish.setStyle("color", 0x801332);
@@ -211,6 +213,19 @@
 				conversationRefreshList.ensureIndexIsVisible(int(selectedRefreshIndex));*/
 				textName.text = name;
 				textInstitution.text = institution;
+				
+				if (p.getProperty("offline") == "enabled") {
+					backgroundBackgroundOffline.color = 0xFFFFFF;
+					labelOffline.setStyle("color", 0x801332);
+					labelOffline.text = "Enabled";
+					labelOfflineDownload.text = p.getProperty("lastDownloadDate").toString();
+				} else {
+					backgroundBackgroundOffline.color = 0x801332;
+					labelOffline.setStyle("color", 0xFFFFFF);
+					labelOffline.text = "Disabled";
+					labelOfflineDownload.visible = false;
+					labelOfflineDownload.includeInLayout = false;
+				}
 			}
 			
 			private function getLanguageSettings():void {
@@ -316,12 +331,63 @@
 					backgroundBackgroundOffline.color = 0xFFFFFF;
 					labelOffline.setStyle("color", 0x801332);
 					labelOffline.text = "Enabled";
+					
+					// http://jimmyflex.blogspot.ca/2008/08/download-server-file-with-air.html
+					var req:URLRequest = new URLRequest(programUrl);
+					stream = new URLStream();
+					stream.addEventListener(Event.COMPLETE, writeAirFile);
+					stream.load(req);
 				} else {
 					p.setProperty("offline", "disabled");
 					backgroundBackgroundOffline.color = 0x801332;
 					labelOffline.setStyle("color", 0xFFFFFF);
 					labelOffline.text = "Disabled";
+					
+					// http://corlan.org/2008/09/02/storing-data-locally-in-air/
+					var file:File = File.applicationStorageDirectory.resolvePath("program.xml");
+					file.deleteFile(); //delete it if exists
+					labelOfflineDownload.visible = false;
+					labelOfflineDownload.includeInLayout = false;
 				}
+			}
+			
+			private function writeAirFile(evt:Event):void {
+				var fileData:ByteArray = new ByteArray();
+				var file:File = File.applicationStorageDirectory.resolvePath("program.xml");
+				var fileStream:FileStream = new FileStream();
+				var datetime:Date = new Date();
+				
+				stream.readBytes(fileData, 0, stream.bytesAvailable);
+				fileStream.open(file, FileMode.WRITE);
+				fileStream.writeBytes(fileData,0,fileData.length);
+				fileStream.close();
+				
+				var hours:Number = datetime.hours;
+				var minutes:Number = datetime.minutes;
+				var seconds:Number = datetime.seconds;
+				var timeString:String = "";
+				
+				if (hours < 10) {
+					timeString += "0" + String(hours);
+				} else {
+					timeString += String(hours);
+				}
+				
+				if (minutes < 10) {
+					timeString += ":" + "0" + String(minutes);
+				} else {
+					timeString += ":" + String(minutes);
+				}
+				
+				if (seconds < 10) {
+					timeString += ":" + "0" + String(seconds);
+				} else {
+					timeString += ":" + String(seconds);
+				}
+				p.setProperty("lastDownloadDate", "Last downloaded at " + datetime.month + "/" + datetime.date + "/" + datetime.fullYear + " at " + timeString);
+				labelOfflineDownload.visible = true;
+				labelOfflineDownload.includeInLayout = true;
+				labelOfflineDownload.text = "Last downloaded at " + datetime.month + "/" + datetime.date + "/" + datetime.fullYear + " at " + timeString;
 			}
 			
 		]]>
@@ -484,7 +550,6 @@
 											<s:Label id="labelFrench" text="Français" color="#FFFFFF" paddingBottom="20" paddingLeft="20" paddingRight="20" paddingTop="20" styleName="desc" width="100%" textAlign="center"/>
 										</s:Group>
 									</s:HGroup>
-									<s:Label id="labelLanguageMessage" text="The application needs to be restarted for the language setting to take effect." styleName="desc" width="100%" paddingTop="10" paddingBottom="10" visible="false" includeInLayout="false"/>
 								</s:VGroup>
 							</s:HGroup>
 						</s:Group>
@@ -531,6 +596,7 @@
 								<s:Image id="imageOffline" height="{labelActionBarTitle.height - 20}" width="{labelActionBarTitle.height - 20}" source="{imgOffline}" smooth="true" smoothingQuality="high"/>
 								<s:VGroup width="100%" height="100%" paddingLeft="30">
 									<s:Label id="labelOfflineTitle" text="Offline" styleName="title" width="100%" paddingTop="10" paddingBottom="10"/>
+									
 									<s:Group id="groupOffline" width="100%" click="groupOffline_clickHandler(event)">
 										<s:Rect width="100%" height="100%" topLeftRadiusX="15" topLeftRadiusY="15" bottomLeftRadiusX="15" bottomLeftRadiusY="15" topRightRadiusX="15" topRightRadiusY="15" bottomRightRadiusX="15" bottomRightRadiusY="15">
 											<s:stroke>
@@ -542,6 +608,7 @@
 										</s:Rect>
 										<s:Label id="labelOffline" text="Disabled" color="#FFFFFF" paddingBottom="20" paddingLeft="20" paddingRight="20" paddingTop="20" styleName="desc" width="100%" textAlign="center"/>
 									</s:Group>
+									<s:Label id="labelOfflineDownload" text="Last download: n/a" color="#000000" paddingBottom="20" paddingLeft="20" paddingRight="20" paddingTop="20" styleName="desc" width="100%" textAlign="center"/>
 								</s:VGroup>
 							</s:HGroup>
 						</s:Group>
@@ -550,30 +617,6 @@
 								<s:SolidColorStroke color="0xB0B0B0" weight="2"/>
 							</s:stroke>
 						</s:Line>
-						
-						<!--<s:Spacer height="20"/>
-						
-						<s:Group id="groupCardConversationRefresh" width="100%">
-						<s:Rect width="100%" height="100%">
-						&lt;!&ndash;<s:stroke>
-						<s:SolidColorStroke id="colourActionBarTitleBorder" color="#000000" weight="2" />
-						</s:stroke>&ndash;&gt;
-						<s:fill><s:SolidColor id="backgroundCardConversationRefresh" color="#FFFFFF"/></s:fill>
-						</s:Rect>
-						<s:HGroup width="100%" height="100%" paddingRight="10" paddingLeft="10" paddingTop="10" paddingBottom="10" verticalAlign="middle">
-						<s:Image id="imageConversationRefresh" height="{labelActionBarTitle.height - 20}" width="{labelActionBarTitle.height - 20}" source="{imgRefresh}" smooth="true" smoothingQuality="high"/>
-						<s:VGroup width="100%" height="100%" paddingLeft="30">
-						<s:Label id="labelConversationRefreshTitle" text="Messages Refresh Time" styleName="title" width="100%" paddingTop="10" paddingBottom="10"/>
-						<s:Label id="labelConversationRefreshDesc" text="This value determines if the messages page automatically refreshes and how often it does so." styleName="desc" color="#888888" width="100%" paddingBottom="10"/>
-						<s:List width="100%" id="conversationRefreshList" contentBackgroundColor="#FFFFFF" dataProvider="{refreshTimes}" height="300"/>
-						</s:VGroup>
-						</s:HGroup>
-						</s:Group>
-						<s:Line width="100%">
-						<s:stroke>
-						<s:SolidColorStroke color="0xB0B0B0" weight="2"/>
-						</s:stroke>
-						</s:Line>-->
 						
 					</s:VGroup>
 					
