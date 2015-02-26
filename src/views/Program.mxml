@@ -52,12 +52,6 @@
 					hGroupActionBarContents.paddingTop = 0;
 				}
 				
-				var offLineFile:File = File.applicationStorageDirectory.resolvePath("program.xml");
-				if (offLineFile.exists) {
-					offLine = true;
-					imageOffline.visible = true;
-				}
-				
 				var colourScheme:String = p.getProperty("colourScheme") as String;
 				var colourSchemeLabel:String = p.getProperty("colourSchemeLabel") as String;
 				
@@ -129,11 +123,17 @@
 					labelActionBarTitle.setStyle("paddingTop", "35");
 					labelActionBarTitle.setStyle("paddingBottom", "35");
 				}*/
-				
-				var urlRequest:URLRequest = new URLRequest("http://www.bryanabsmith.com");
-				urlMonitor = new URLMonitor(urlRequest);
-				urlMonitor.addEventListener(StatusEvent.STATUS, onStatusEvent);
-				urlMonitor.start();
+				var offLineFile:File = File.applicationStorageDirectory.resolvePath("program.xml");
+				if (offLineFile.exists) {
+					offLine = true;
+					imageOffline.visible = true;
+					showOffline();
+				} else {
+					var urlRequest:URLRequest = new URLRequest("http://www.bryanabsmith.com");
+					urlMonitor = new URLMonitor(urlRequest);
+					urlMonitor.addEventListener(StatusEvent.STATUS, onStatusEvent);
+					urlMonitor.start();
+				}
 			}
 			
 			private function onStatusEvent(event:StatusEvent):void
@@ -154,7 +154,7 @@
 			{
 				var fileContents:XML = new XML(event.currentTarget.data);
 				
-				if (fileContents.availability.@isIt == "false") {
+				if (fileContents.availability.@isIt == "fals") {
 					
 					var topSpacer:Spacer = new Spacer();
 					topSpacer.percentHeight = 100;
@@ -184,7 +184,7 @@
 			}
 			
 			private function showOffline():void {
-				trace(File.applicationStorageDirectory.resolvePath("program.xml").url);
+				vGroupContent.removeAllElements();
 				var offlineRequest:URLRequest = new URLRequest(File.applicationStorageDirectory.resolvePath("program.xml").url);
 				
 				var offlineURL:URLLoader = new URLLoader();
@@ -192,10 +192,157 @@
 				offlineURL.load(offlineRequest);
 				
 				function displayText(event:Event):void {
+					
 					var fileContents:XML = new XML(event.currentTarget.data);
+					var count:int = 0;
+					var records:Array = [];
+					var curDate:String = "";
+					var curTime:String = "";
+					
 					for (var item:String in fileContents.item) {
 						trace(fileContents.item.@name[item]);
+						
+						var pTitle:String = fileContents.item.@title[item];
+						var pName:String = fileContents.item.@name[item];
+						var pDate:String = fileContents.item.@date[item];
+						var pTime:String = fileContents.item.@time[item];
+						var pRoom:String = fileContents.item.@room[item];
+						
+						var groupProgramCard:Group = new Group();
+						var programRect:Rect = new Rect();
+						var programStrokeColour:SolidColorStroke = new SolidColorStroke();
+						var programFill:SolidColor = new SolidColor();
+						var programLineColour:SolidColorStroke = new SolidColorStroke();
+						var programLine:Line = new Line();
+						var vGroupProgram:VGroup = new VGroup();
+						var vGroupInfo:VGroup = new VGroup();
+						var bottomSpacer:Spacer = new Spacer();
+						
+						var name:Label = new Label();
+						var title:Label = new Label();
+						var time:Label = new Label();
+						var datetime:Label = new Label();
+						var room:Label = new Label();
+						
+						groupProgramCard.percentWidth = 100;
+						//groupBookCard.percentHeight = 10;
+						
+						programRect.percentWidth = 100;
+						programRect.percentHeight = 100;							
+						
+						programStrokeColour.color = 0xFFFFFF;
+						programStrokeColour.weight = 2;
+						programRect.stroke = programStrokeColour;
+						
+						programFill.color = 0xFFFFFF;
+						programRect.fill = programFill;
+						
+						groupProgramCard.addElement(programRect);
+						
+						programLine.percentWidth = 100;
+						programLineColour.color = 0xB0B0B0;
+						programLineColour.weight = 2;
+						programLine.stroke = programLineColour;
+						
+						records[count] = new HGroup();
+						// http://stackoverflow.com/a/1046147
+						records[count].percentWidth = 100;
+						records[count].verticalAlign = "middle";
+						
+						vGroupProgram.percentWidth = 100;
+						//vGroupProgram.height = 120;
+						vGroupProgram.paddingTop = 10;
+						vGroupProgram.paddingBottom = 10;
+						vGroupProgram.paddingLeft = 10;
+						vGroupProgram.paddingRight = 10;
+						
+						if (pDate != curDate) {
+							curTime = "";
+							var dateLabel:Label = new Label();
+							dateLabel.text = "May " + pDate;
+							dateLabel.percentWidth = 100;
+							dateLabel.setStyle("styleName", "title");
+							dateLabel.setStyle("color", "#801332");
+							if (curDate.length > 0) {
+								dateLabel.setStyle("paddingTop", "75");
+							}
+							dateLabel.setStyle("paddingBottom", "15");
+							curDate = pDate;
+							vGroupContent.addElement(dateLabel);
+						}
+						
+						if (pTime != curTime) {
+							var timeLabel:Label = new Label();
+							timeLabel.text = pTime;
+							timeLabel.percentWidth = 100;
+							timeLabel.setStyle("styleName", "title");
+							if (curTime.length > 0) {
+								timeLabel.setStyle("paddingTop", "45");
+							}
+							timeLabel.setStyle("paddingBottom", "15");
+							curTime = pTime;
+							vGroupContent.addElement(timeLabel);
+						}
+						
+						title.text = pTitle;
+						title.percentWidth = 100;
+						title.setStyle("styleName", "title");
+						title.toolTip = pName;
+						title.errorString = pTitle;
+						
+						name.text = pName;
+						name.percentWidth = 100;
+						name.setStyle("styleName", "desc");
+						name.toolTip = pName;
+						name.errorString = pTitle;
+						
+						time.text = pTime;
+						time.percentWidth = 100;
+						time.setStyle("styleName", "desc");
+						time.toolTip = pTime;
+						time.errorString = pTime;
+						
+						datetime.text = "May " + pDate + " (" + pTime + ")";
+						datetime.percentWidth = 100;
+						datetime.setStyle("styleName", "desc");
+						datetime.toolTip = pDate;
+						datetime.errorString = pDate;
+						
+						room.text = "LMX " + pRoom;
+						room.percentWidth = 100;
+						room.setStyle("styleName", "desc");
+						room.toolTip = pRoom;
+						room.errorString = pRoom;
+						
+						vGroupProgram.addElement(title);
+						vGroupProgram.addElement(name);
+						vGroupProgram.addElement(datetime);
+						vGroupProgram.addElement(room);
+						
+						records[count].addElement(vGroupProgram);
+						
+						//vGroupInfo.percentWidth = 100;
+						//vGroupProgram.height = 120;
+						vGroupInfo.paddingTop = 10;
+						vGroupInfo.paddingBottom = 10;
+						vGroupInfo.paddingLeft = 10;
+						vGroupInfo.paddingRight = 10;
+						
+						records[count].addElement(vGroupInfo);
+						
+						groupProgramCard.addElement(records[count]);
+						vGroupContent.addElement(groupProgramCard);
+						vGroupContent.addElement(programLine);
+						
+						/*name.addEventListener(MouseEvent.CLICK, onClickProgram);*/
+						
+						bottomSpacer.height = 15;
+						bottomSpacer.percentWidth = 100;
+						
+						vGroupContent.addElement(bottomSpacer);
+						count++;
 					}
+					vGroupContent.visible = true;
 				}
 			}
 			
