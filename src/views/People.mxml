@@ -25,6 +25,10 @@
 			[Bindable]
 			public var imgBryanSmith:Class;
 			
+			[Embed(source="../res/people/andreotti.png")]
+			[Bindable]
+			public var imgVanessaAndreotti:Class;
+			
 			[Embed(source="../res/people/legrange.png")]
 			[Bindable]
 			public var imgLesleyLeGrange:Class;
@@ -271,6 +275,24 @@
 					detailsKeynoteDetails.text = "In the expanding internationalization of education movement, there is heightened attention to the qualities and desired outcomes of intercultural encounters, experiences and lessons. However, conceptions of (cultural) difference, of development and of the learner tend toward the simplistic, the measurable and the determinable under pressures of performativity. For example, 'intercultural competence' frames the leaner as a self-enclosed knowledge-seeking subject who progressively moves from the ethnocentric to the ethno-relative along a determinable spectrum, itself set apart from (ethnocentric) culture. Even more 'critical' models often hold to too-simple correspondences between knowledge, awareness and transformation. 'Cosmopolitan literacies' represents a kind of intervention into this discursive space, offering a more complex conception of the limits and possibilities of learning across difference, the core curricular aim of international education. This presentation will introduce and discuss the lens of cosmopolitan literacies as well as how it may find traction in performative times.";
 				}
 			}
+			
+			protected function groupCardAndreotti_clickHandler(event:MouseEvent):void
+			{
+				groupViewKeynoteDetails.visible = true;
+				groupViewKeynoteDetails.includeInLayout = true;
+				
+				detailsName.text = "Vanessa Andreotti";
+				if (selectedLanguage == "fr") {
+					detailsPosition.text = "Professeur associée, Chaire canadienne de la recherche sur la race, les inégalités et le changement global";
+					detailsTitle.text = "Envisager l’éducation en tant que «ré-organisation non-coercitive des désirs»";
+					detailsKeynoteDetails.text = "Suivant la suggestion de Gayatri Spivak, cette présentation aborde l’éducation en tant que « ré-organisation non-coercitive des désirs», afin d’en offrir une interprétation pour les études curriculaires. Ancrée dans une analyse discursive situant le modelage des désirs au coeur du phénomène historique du modernisme colonial, j’explore les difficultés et possibilités évoquées par l’idée de remodelages pédagogiques non-coercitifs.";
+				} else {
+					detailsPosition.text = "Associate Professor, Canada Research Chair in Race, Inequalities and Global Change";
+					detailsTitle.text = "Imagining Education as an 'Un-coercive Re-arrangement of Desires'";
+					detailsKeynoteDetails.text = "Drawing on Gayatri Spivak's suggestion that education should be an 'un-coercive re-arrangement of desires', this presentation offers one interpretation of what that could mean in curriculum studies. Grounded on a discursive analysis of the allocation of desires within the historical phenomenon of modernity/coloniality, I explore the difficulties and possibilities opened by the idea of un-coercive pedagogical reallocations.";
+				}
+			}
+			
 		]]>
 	</fx:Script>
 	
@@ -308,6 +330,32 @@
 					<s:VGroup id="vGroupContent" height="100%" width="100%" gap="0" paddingRight="20" paddingLeft="20" paddingTop="20" paddingBottom="20">
 						
 						<s:Label id="labelKeynotes" text="Conference Keynotes" width="100%" styleName="title"/>
+						
+						<s:Spacer height="20"/>
+						
+						<s:Group id="groupCardAndreotti" width="100%" click="groupCardAndreotti_clickHandler(event)">
+							<s:Rect width="100%" height="100%">
+								<!--<s:stroke>
+								<s:SolidColorStroke id="colourActionBarTitleBorder" color="#000000" weight="2" />
+								</s:stroke>-->
+								<s:fill><s:SolidColor id="backgroundCardAndreotti" color="#FFFFFF"/></s:fill>
+							</s:Rect>
+							
+							<s:HGroup width="100%" height="100%" paddingRight="10" verticalAlign="middle">
+								<s:Image id="imageAndreotti" height="{labelActionBarTitle.height + 100}" width="{labelActionBarTitle.height + 100}" source="{imgVanessaAndreotti}" smooth="true" smoothingQuality="high"/>
+								<s:VGroup width="100%" height="100%" paddingLeft="30" verticalAlign="middle">
+									<s:Label id="labelAndreottiTitle" text="Vanessa Andreotti" styleName="title" width="100%"/>
+									<s:Label id="labelAndreottiDesc" text="University of British Columbia" styleName="desc" width="100%"/>
+									<s:Spacer height="10"/>
+									<!--<s:Label id="labelAndreottiEmail" text="vanessa.andreotti@ubc.ca" styleName="desc" width="100%" color="0x0000EE" click="navigateToURL(new URLRequest('Eero.Andreotti@uta.fi'));"/>-->
+								</s:VGroup>
+							</s:HGroup>
+						</s:Group>
+						<s:Line width="100%">
+							<s:stroke>
+								<s:SolidColorStroke color="0xB0B0B0" weight="2"/>
+							</s:stroke>
+						</s:Line>
 						
 						<s:Spacer height="20"/>
 						

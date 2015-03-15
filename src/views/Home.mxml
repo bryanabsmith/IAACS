@@ -71,9 +71,17 @@
 			
 			private var isTablet:Boolean = false;
 			private var offLine:Boolean = false;
+			private var newsLoaded:Boolean = false;
 
 			protected function view1_creationCompleteHandler(event:FlexEvent):void
 			{
+				
+				var offLineFile:File = File.applicationStorageDirectory.resolvePath("program.xml");
+				if (offLineFile.exists) {
+					offLine = true;
+					//imageOffline.visible = true;
+				}
+				
 				// http://forum.starling-framework.org/topic/detect-device-type-phone-tablet
 				var w:Number = Capabilities.screenResolutionX;
 				var h:Number = Capabilities.screenResolutionY;
@@ -189,29 +197,68 @@
 			{
 				var evt:StatusEvent = event;
 				if (evt.code == "Service.available") {
-					/*groupNetworkError.visible = false;
-					groupNetworkError.includeInLayout = false;
-					mainScroller.enabled = true;*/
-					imageOffline.visible = false;
-					var myLoader:URLLoader = new URLLoader();
-					myLoader.addEventListener(Event.COMPLETE, showNewsList);
-					myLoader.load(new URLRequest(url));
+					
+					groupCardNews.includeInLayout = true;
+					lineNews.includeInLayout = true;
+					spacerNewsProgram.includeInLayout = true;
+					groupCardRestaurant.visible = true;
+					groupCardRestaurant.includeInLayout = true;
+					lineRestaurants.visible = true;
+					lineRestaurants.includeInLayout = true;
+					spacerRestaurantsHotels.includeInLayout = true;
+					groupCardHotel.includeInLayout = true;
+					groupCardHotel.visible = true;
+					lineHotels.includeInLayout = true;
+					lineHotels.visible = true;
+					spacerHotelsConversation.includeInLayout = true;
+					spacerHotelsConversation.visible = true;
+					groupCardConversation.includeInLayout = true;
+					groupCardConversation.visible = true;
+					lineConversation.includeInLayout = true;
+					lineConversation.visible = true;
+					spacerHotelsConversation.includeInLayout = true;
+					spacerHotelsConversation.visible = true;
+					spacerConversationPeople.includeInLayout = true;
+					spacerConversationPeople.visible = true;
+					
+					if (newsLoaded == false) {
+						var myLoader:URLLoader = new URLLoader();
+						myLoader.addEventListener(Event.COMPLETE, showNewsList);
+						myLoader.load(new URLRequest(url));
+						newsLoaded = true;
+					}
 				} else {
 					/*groupNetworkError.visible = true;
 					groupNetworkError.includeInLayout = true;
 					mainScroller.enabled = false;*/
-					
-					var offLineFile:File = File.applicationStorageDirectory.resolvePath("program.xml");
-					if (offLineFile.exists) {
-						offLine = true;
-						imageOffline.visible = true;
-					}
+					groupCardNews.includeInLayout = false;
+					lineNews.includeInLayout = false;
+					spacerNewsProgram.includeInLayout = false;
+					groupCardRestaurant.visible = false;
+					groupCardRestaurant.includeInLayout = false;
+					lineRestaurants.visible = false;
+					lineRestaurants.includeInLayout = false;
+					spacerRestaurantsHotels.includeInLayout = false;
+					groupCardHotel.includeInLayout = false;
+					groupCardHotel.visible = false;
+					lineHotels.includeInLayout = false;
+					lineHotels.visible = false;
+					spacerHotelsConversation.includeInLayout = false;
+					spacerHotelsConversation.visible = false;
+					groupCardConversation.includeInLayout = false;
+					groupCardConversation.visible = false;
+					lineConversation.includeInLayout = false;
+					lineConversation.visible = false;
+					spacerHotelsConversation.includeInLayout = false;
+					spacerHotelsConversation.visible = false;
+					spacerConversationPeople.includeInLayout = false;
+					spacerConversationPeople.visible = false;
 				}
 			}
 			
 			protected function showNewsList(event:Event):void
 			{
-				vGroupViewNews.removeAllElements();
+				//vGroupViewNews.removeAllElements();
 				var fileContents:XML = new XML(event.currentTarget.data);
 				var count:int = 0;
 				var records:Array = [];
@@ -231,7 +278,7 @@
 					var newsRect:Rect = new Rect();
 					var newsStrokeColour:SolidColorStroke = new SolidColorStroke();
 					var newsFill:SolidColor = new SolidColor();
-
+					
 					var vGroupNews:VGroup = new VGroup();
 					var vGroupInfo:VGroup = new VGroup();
 					var bottomSpacer:Spacer = new Spacer();
@@ -310,6 +357,8 @@
 					
 					groupNewsCard.addElement(records[count]);
 					vGroupViewNews.addElement(groupNewsCard);
+					
+					//trace(vGroupViewNews.getElementAt(0));
 					
 					bottomSpacer.height = 10;
 					bottomSpacer.percentWidth = 100;
@@ -445,7 +494,7 @@
 			<s:HGroup id="hGroupActionBarContents" width="100%" verticalAlign="middle" height="100%" paddingLeft="10" paddingRight="10">
 				<s:Label id="labelActionBarTitle" maxDisplayedLines="1" text="IAACS 2015" color="#FFFFFF" styleName="title" paddingTop="20" paddingBottom="20"/>
 				<s:Spacer width="100%"/>
-				<s:Image id="imageOffline" source="{imgOffline}" visible="false" smooth="true" smoothingQuality="high" height="{hGroupActionBarContents.height/1.5}" width="{hGroupActionBarContents.height/1.5}"/>
+				<!--<s:Image id="imageOffline" source="{imgOffline}" visible="false" smooth="true" smoothingQuality="high" height="{hGroupActionBarContents.height/1.5}" width="{hGroupActionBarContents.height/1.5}"/>-->
 			</s:HGroup>
 		</s:Group>
 		
@@ -482,13 +531,13 @@
 								</s:VGroup>
 							</s:HGroup>
 						</s:Group>
-						<s:Line width="100%">
+						<s:Line width="100%" id="lineNews">
 							<s:stroke>
 								<s:SolidColorStroke color="0xB0B0B0" weight="2"/>
 							</s:stroke>
 						</s:Line>
 						
-						<s:Spacer height="20"/>
+						<s:Spacer id="spacerNewsProgram" height="20"/>
 						
 						<!--<s:Group id="groupCardDigest" width="100%" click="groupCardDigest_clickHandler(event)">
 							<s:Rect width="100%" height="100%">
@@ -526,13 +575,13 @@
 								</s:VGroup>
 							</s:HGroup>
 						</s:Group>
-						<s:Line width="100%">
+						<s:Line width="100%" id="lineProgram">
 							<s:stroke>
 								<s:SolidColorStroke color="0xB0B0B0" weight="2"/>
 							</s:stroke>
 						</s:Line>
 						
-						<s:Spacer height="20"/>
+						<s:Spacer id="spacerProgramRestaurants" height="20"/>
 						
 						<s:Group id="groupCardRestaurant" width="100%" click="groupCardRestaurant_clickHandler(event)">
 							<s:Rect width="100%" height="100%">
@@ -549,13 +598,13 @@
 								</s:VGroup>
 							</s:HGroup>
 						</s:Group>
-						<s:Line width="100%">
+						<s:Line width="100%" id="lineRestaurants">
 							<s:stroke>
 								<s:SolidColorStroke color="0xB0B0B0" weight="2"/>
 							</s:stroke>
 						</s:Line>
 						
-						<s:Spacer height="20"/>
+						<s:Spacer id="spacerRestaurantsHotels" height="20"/>
 						
 						<s:Group id="groupCardHotel" width="100%" click="groupCardHotel_clickHandler(event)">
 							<s:Rect width="100%" height="100%">
@@ -572,13 +621,13 @@
 								</s:VGroup>
 							</s:HGroup>
 						</s:Group>
-						<s:Line width="100%">
+						<s:Line width="100%" id="lineHotels">
 							<s:stroke>
 								<s:SolidColorStroke color="0xB0B0B0" weight="2"/>
 							</s:stroke>
 						</s:Line>
 						
-						<s:Spacer height="20"/>
+						<s:Spacer id="spacerHotelsConversation" height="20"/>
 						
 						<s:Group id="groupCardConversation" width="100%" click="groupCardConversation_clickHandler(event)">
 							<s:Rect width="100%" height="100%">
@@ -595,13 +644,13 @@
 								</s:VGroup>
 							</s:HGroup>
 						</s:Group>
-						<s:Line width="100%">
+						<s:Line width="100%" id="lineConversation">
 							<s:stroke>
 								<s:SolidColorStroke color="0xB0B0B0" weight="2"/>
 							</s:stroke>
 						</s:Line>
 						
-						<s:Spacer height="20"/>
+						<s:Spacer id="spacerConversationPeople" height="20"/>
 						
 						<s:Group id="groupCardPeople" width="100%" click="groupCardPeople_clickHandler(event)">
 							<s:Rect width="100%" height="100%">
@@ -618,13 +667,13 @@
 								</s:VGroup>
 							</s:HGroup>
 						</s:Group>
-						<s:Line width="100%">
+						<s:Line width="100%" id="linePeople">
 							<s:stroke>
 								<s:SolidColorStroke color="0xB0B0B0" weight="2"/>
 							</s:stroke>
 						</s:Line>
 						
-						<s:Spacer height="20"/>
+						<s:Spacer id="spacerPeopleConfigure" height="20"/>
 						
 						<s:Group id="groupCardConfigure" width="100%" click="groupCardConfigure_clickHandler(event)">
 							<s:Rect width="100%" height="100%">
@@ -641,13 +690,13 @@
 								</s:VGroup>
 							</s:HGroup>
 						</s:Group>
-						<s:Line width="100%">
+						<s:Line width="100%" id="lineConfigure">
 							<s:stroke>
 								<s:SolidColorStroke color="0xB0B0B0" weight="2"/>
 							</s:stroke>
 						</s:Line>
 						
-						<s:Spacer height="20"/>
+						<s:Spacer id="spacerConfigureAbout" height="20"/>
 						
 						<s:Group id="groupCardAbout" width="100%" click="groupCardAbout_clickHandler(event)">
 							<s:Rect width="100%" height="100%">
@@ -664,7 +713,7 @@
 								</s:VGroup>
 							</s:HGroup>
 						</s:Group>
-						<s:Line width="100%">
+						<s:Line width="100%" id="lineAbout">
 							<s:stroke>
 								<s:SolidColorStroke color="0xB0B0B0" weight="2"/>
 							</s:stroke>
@@ -710,7 +759,7 @@
 					<s:BusyIndicator id="loadingNews" symbolColor="0xFFFFFF"/>
 				</s:HGroup>
 				<s:Scroller id="newsScroller" width="100%" height="100%">
-					<s:VGroup paddingBottom="20" paddingLeft="20" paddingRight="20" width="100%" height="100%">
+					<s:VGroup id="vGroupNews" paddingBottom="20" paddingLeft="20" paddingRight="20" width="100%" height="100%">
 						<s:VGroup id="vGroupViewNews" width="100%" height="100%">
 							
 						</s:VGroup>

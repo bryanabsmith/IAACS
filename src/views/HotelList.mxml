@@ -90,7 +90,7 @@
 					labelResidenceDesc.text = "Votre numéro de réservation est (booking reference number): 6438\nLes gens peuvent réserver:\n	- par courriel: reserve@uOttawa.ca\n	- par téléphone local: 613-564-5400\n	- par téléphone sans frais: 1-888-564-4545 (service disponible 24 h)";
 				} else {
 					languageURL = new URLRequest("../res/translations/en.xml");
-					labelResidenceDesc.text = "Reservation Number (booking reference number): 6438\nBooking Information:\n - Email: reserve@uOttawa.ca\n - Phone Number: 613-564-5400\n - Toll-Free: 1 -888-564-4545 (service available 24 hours)";
+					labelResidenceDesc.text = "Reservation Number (booking reference number): 6438\nBooking Information:\n - Email: reserve@uOttawa.ca\n - Phone Number: 613-564-5400\n - Toll-Free: 1-888-564-4545 (service available 24 hours)";
 				}
 				
 				var licenceLoader:URLLoader = new URLLoader();
@@ -140,7 +140,7 @@
 				var rName:String = "";
 				var rAddress:String = "";
 				var rPrice:String = "";
-				var rCuisine:String = "";
+				var rType:String = "";
 				var rCoord:Array = [];
 				var rNumber:String = "";
 				var rURL:String = "";
@@ -150,9 +150,9 @@
 					rName = fileContents.item.@name[item];
 					rAddress = fileContents.item.@address[item];
 					rPrice = fileContents.item.@price[item];
-					rCuisine = fileContents.item.@cuisine[item];
+					rType = fileContents.item.@type[item];
 					rCoord = [fileContents.item.@lat[item], fileContents.item.@long[item]];
-					rNumber = fileContents.item.@number[item];
+					rNumber = fileContents.item.@phone[item];
 					rURL = fileContents.item.@url[item];
 					
 					var groupRestaurantCard:Group = new Group();
@@ -217,7 +217,7 @@
 					address.id = rCoord[1];
 					address.errorString = rName;
 					
-					details.text = rCuisine + " (" + rPrice + ")";
+					details.text = rType + " (" + rPrice + ")";
 					details.percentWidth = 100;
 					details.setStyle("styleName", "desc");
 					details.toolTip = rCoord[0];

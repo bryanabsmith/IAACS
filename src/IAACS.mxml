@@ -13,9 +13,9 @@
 		}
 		
 		@font-face { 
-			src: url("fonts/FiraSans-Italic.otf"); 
-			fontFamily: FiraItalic; 
-			embedAsCFF: true;
+			src: url("fonts/FiraSans.otf"); 
+			fontFamily: FiraText; 
+			embedAsCFF: false;
 		}
 		
 		s|Application {
@@ -47,6 +47,7 @@
 			contentBackgroundColor: #FFFFFF;
 			focusAlpha: 0;
 			focusColor: #FFFFFF;
+			fontFamily: FiraText;
 		}
 		
 		s|TextArea
@@ -62,6 +63,7 @@
 			contentBackgroundColor: #FFFFFF;
 			focusAlpha: 0;
 			focusColor: #FFFFFF;
+			fontFamily: FiraText;
 		}
 		
 		.title {

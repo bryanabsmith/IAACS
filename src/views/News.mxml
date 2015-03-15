@@ -26,6 +26,8 @@
 			
 			private var url:String = "http://bryanabsmith.com/iaacs/app/news_list.xml";
 			
+			private var newsLoaded:Boolean = false;
+			
 			protected function view1_creationCompleteHandler(event:FlexEvent):void
 			{
 				if (Capabilities.os.substring(0,2) == "iP") { // iPhone, iPad and iPod Touch padding at the top
@@ -85,13 +87,16 @@
 					groupNetworkError.includeInLayout = false;
 					mainScroller.enabled = true;
 					
-					var myLoader:URLLoader = new URLLoader();
-					myLoader.addEventListener(Event.COMPLETE, showNewsList);
-					myLoader.load(new URLRequest(url));
+					if (newsLoaded == false) {
+						var myLoader:URLLoader = new URLLoader();
+						myLoader.addEventListener(Event.COMPLETE, showNewsList);
+						myLoader.load(new URLRequest(url));
+						newsLoaded = true;
+					}
 				} else {
 					groupNetworkError.visible = true;
 					groupNetworkError.includeInLayout = true;
-					mainScroller.enabled = false;
+					//mainScroller.enabled = false;
 				}
 			}
 			
