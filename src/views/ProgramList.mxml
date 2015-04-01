@@ -120,6 +120,9 @@
 				var pTime:String = "";
 				var pRoom:String = "";
 				var pAbstract:String = "";
+				var pSessionTitle:String = "";
+				
+				var sessionCount:int = 1;
 				
 				for (var item:String in fileContents.item) {
 					
@@ -129,6 +132,7 @@
 					pTime = fileContents.item.@time[item];
 					pRoom = fileContents.item.@room[item];
 					pAbstract = fileContents.item.@abstract[item];
+					pSessionTitle = fileContents.item.@sessionTitle[item];
 					
 					if (pDate == String(dateValue)) {
 						var groupProgramCard:Group = new Group();
@@ -185,6 +189,12 @@
 						title.toolTip = pName;
 						title.errorString = pTitle;
 						
+						if (pSessionTitle == "") {
+							title.setStyle("color", "#1D62F0");
+						} else {
+							title.setStyle("color", "#008000");
+						}
+						
 						name.text = pName;
 						name.percentWidth = 100;
 						name.setStyle("styleName", "desc");
@@ -193,7 +203,8 @@
 						
 						if (pTime != curTime) {
 							var timeLabel:Label = new Label();
-							timeLabel.text = pTime;
+							timeLabel.text = "Session " + String(sessionCount) + ": " + pTime;
+							sessionCount++;
 							timeLabel.percentWidth = 100;
 							timeLabel.setStyle("styleName", "title");
 							if (curTime.length > 0) {
@@ -204,14 +215,15 @@
 							vGroupContent.addElement(timeLabel);
 						}
 						
-						details.text = pTime + " (" + roomTitle + " " + pRoom + ")";
+						details.text = monthTitle + " " + pDate + ", " + pTime + " (" + pRoom + ")";
 						details.percentWidth = 100;
 						details.setStyle("styleName", "desc");
+						details.setStyle("color", 0x801332);
 						details.toolTip = pName;
 						details.errorString = pTitle;
 						
-						vGroupProgram.addElement(name);
 						vGroupProgram.addElement(title);
+						vGroupProgram.addElement(name);
 						vGroupProgram.addElement(details);
 						
 						records[count].addElement(vGroupProgram);
@@ -264,6 +276,7 @@
 				var pTime:String = "";
 				var pRoom:String = "";
 				var pAbstract:String = "";
+				var pSessionTitle:String = "";
 				
 				var pNameLower:String = "";
 				var pTitleLower:String = "";
@@ -278,6 +291,7 @@
 					pTime = fileContents.item.@time[item];
 					pRoom = fileContents.item.@room[item];
 					pAbstract = fileContents.item.@abstract[item];
+					pSessionTitle = fileContents.item.@sessionTitle[item];
 					
 					pNameLower = pName.toLowerCase();
 					pTitleLower = pTitle.toLowerCase();
@@ -337,20 +351,27 @@
 						title.toolTip = pName;
 						title.errorString = pTitle;
 						
+						if (pSessionTitle == "") {
+							title.setStyle("color", "#1D62F0");
+						} else {
+							title.setStyle("color", "#008000");
+						}
+						
 						name.text = pName;
 						name.percentWidth = 100;
 						name.setStyle("styleName", "desc");
 						name.toolTip = pName;
 						name.errorString = pTitle;
 						
-						details.text = monthTitle + " " + pDate + ", " + pTime + " (" + roomTitle + " " + pRoom + ")";
+						details.text = monthTitle + " " + pDate + ", " + pTime + " (" + pRoom + ")";
 						details.percentWidth = 100;
 						details.setStyle("styleName", "desc");
+						details.setStyle("color", 0x801332);
 						details.toolTip = pName;
 						details.errorString = pTitle;
 						
-						vGroupProgram.addElement(name);
 						vGroupProgram.addElement(title);
+						vGroupProgram.addElement(name);
 						vGroupProgram.addElement(details);
 						
 						records[count].addElement(vGroupProgram);
